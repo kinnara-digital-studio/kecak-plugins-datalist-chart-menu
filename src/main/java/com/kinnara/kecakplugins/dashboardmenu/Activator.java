@@ -1,4 +1,4 @@
-package com.kecak.hkm;
+package com.kinnara.kecakplugins.dashboardmenu;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,18 +1,62 @@
 [{
-        title: '@@hkm.dashboard.title@@',
-        properties:[{
-            name : 'customId',
-            label : '@@hkm.dashboard.customId@@',
-            type : 'textfield'
-        },{
-            name : 'label',
-            label : '@@hkm.dashboard.label@@',
-            type : 'textfield'
-        },{
-            name : 'noSeri',
-            label : '@@hkm.dashboard.noSeri@@',
-            required: 'true',
-            type : 'textfield'
-        }]
+    title: '@@dashboardMenu.title@@',
+    properties:[{
+        name : 'id',
+        label : 'Id',
+        type : 'hidden'
+    }, {
+        name : 'customId',
+        label : '@@dashboardMenu.customId@@',
+        type : 'textfield',
+        regex_validation : '^[a-zA-Z0-9_]+$',
+        validation_message : '@@Invalid ID@@'
+    },{
+        name : 'label',
+        label : '@@dashboardMenu.label@@',
+        type : 'textfield',
+        required : 'true'
+    }, {
+        name : 'dataListId',
+        label : '@@dashboardMenu.dataListId@@',
+        type : 'selectbox',
+        required : 'true',
+        options_ajax : '[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options'
+	}, {
+		name : 'chartType',
+		label : '@@dashboardMenu.chartType@@',
+		type : 'selectbox',
+		required : 'true',
+		options : [{
+			value : 'bar',
+			label : '@@dashboardMenu.chartType.verticalBar@@'
+		}]
+	}]
+}, {
+	title : '@@dashboardMenu.data@@',
+	properties : [{
+		name : 'labelField',
+		label : '@@dashboardMenu.labelField@@',
+		type : 'textfield',
+		required : 'true'
+	}, {
+		name : 'valueField',
+		label : '@@dashboardMenu.valueField@@',
+		description : '@@dashboardMenu.valueField.description@@',
+		type : 'textfield',
+		required : 'true'
+	}]
+}, {
+	title : '@@dashboardMenu.ui@@',
+	properties : [{
+		name : 'maxColor',
+		label : '@@dashboardMenu.maxColor@@',
+		description : '@@dashboardMenu.maxColor.description@@',
+		type : 'textfield'
+	}, {
+		name : 'minColor',
+		label : '@@dashboardMenu.minColor@@',
+		description : '@@dashboardMenu.minColor.description@@',
+		type : 'textfield'
+	}]
 }]
 

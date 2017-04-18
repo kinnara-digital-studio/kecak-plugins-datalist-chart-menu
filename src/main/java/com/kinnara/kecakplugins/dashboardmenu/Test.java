@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.kecak.hkm;
+package com.kinnara.kecakplugins.dashboardmenu;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
