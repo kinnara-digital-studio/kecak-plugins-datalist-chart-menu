@@ -28,7 +28,22 @@
 		required : 'true',
 		options : [{
 			value : 'bar',
-			label : '@@dashboardMenu.chartType.verticalBar@@'
+			label : '@@dashboardMenu.chartType.bar@@'
+		}, {
+			value : 'line',
+			label : '@@dashboardMenu.chartType.line@@'
+		}, {
+			value : 'polarArea',
+			label : '@@dashboardMenu.chartType.polarArea@@'
+		}, {
+			value : 'radar',
+			label : '@@dashboardMenu.chartType.radar@@'
+		}, {
+			value : 'pie',
+			label : '@@dashboardMenu.chartType.pie@@'
+		}, {
+			value : 'doughnut',
+			label : '@@dashboardMenu.chartType.doughnut@@'
 		}]
 	}]
 }, {
@@ -36,14 +51,25 @@
 	properties : [{
 		name : 'labelField',
 		label : '@@dashboardMenu.labelField@@',
-		type : 'textfield',
-		required : 'true'
+		description : '@@dashboardMenu.labelField.description@@',
+		type : 'textfield'
 	}, {
-		name : 'valueField',
+		name : 'valueFields',
 		label : '@@dashboardMenu.valueField@@',
 		description : '@@dashboardMenu.valueField.description@@',
-		type : 'textfield',
-		required : 'true'
+		type : 'grid',
+		required : 'true',
+		columns : [{
+			key : 'field',
+			label : '@@dashboardMenu.valueField.field@@',
+			required : 'true'
+		}, {
+			key : 'maxColor',
+			label : '@@dashboardMenu.valueField.maxColor@@'
+		}, {
+			key : 'minColor',
+			label : '@@dashboardMenu.valueField.minColor@@'
+		}]
 	}]
 }, {
 	title : '@@dashboardMenu.ui@@',

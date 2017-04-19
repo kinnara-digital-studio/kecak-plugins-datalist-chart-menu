@@ -1,5 +1,6 @@
 package com.kinnara.kecakplugins.dashboardmenu;
 
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,7 +53,23 @@ public class Dashboard extends UserviewMenu {
         	for(Map<String, String> row : collections) {
         		data.put(new JSONObject(row));
         	}
+        	
+        	// use datalist's primary key if label field not specified 
+        	if(getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
+        		setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+        	
         	dataModel.put("data", data);
+        }
+        
+        for(Object o : (Object[])getProperty("valueFields")) {
+        	Map<String, String> row = (Map<String, String>)o;
+        	if((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
+        		row.put("maxColor", row.get("minColor"));
+        	} 
+        	
+        	if((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
+        		row.put("minColor", row.get("maxColor"));
+        	}
         }
         
         dataModel.put("className", getClassName());
