@@ -9,7 +9,7 @@
         label : '@@dashboardMenu.customId@@',
         type : 'textfield',
         regex_validation : '^[a-zA-Z0-9_]+$',
-        validation_message : '@@Invalid ID@@'
+        validation_message : '@@dashboardMenu.invalidId@@'
     },{
         name : 'label',
         label : '@@dashboardMenu.label@@',
@@ -74,15 +74,31 @@
 }, {
 	title : '@@dashboardMenu.ui@@',
 	properties : [{
-		name : 'maxColor',
-		label : '@@dashboardMenu.maxColor@@',
-		description : '@@dashboardMenu.maxColor.description@@',
-		type : 'textfield'
+		name : 'width',
+		label : '@@dashboardMenu.width@@',
+		type : 'textfield',
+		value : '100%',
+		required : 'true'
 	}, {
-		name : 'minColor',
-		label : '@@dashboardMenu.minColor@@',
-		description : '@@dashboardMenu.minColor.description@@',
-		type : 'textfield'
+		name : 'height',
+		label : '@@dashboardMenu.height@@',
+		type : 'textfield',
+		value : '100%',
+		required : 'true'
+	}, {
+		name : 'customColors',
+		label : '@@dashboardMenu.customColors@@',
+		description : '@@dashboardMenu.customColors.description@@',
+		type : 'grid',
+		columns : [{
+			key : 'labelValue',
+			label : '@@dashboardMenu.customColors.labelValue@@',
+			required : 'true'
+		}, {
+			key : 'color',
+			label : '@@dashboardMenu.customColors.color@@',
+			required : 'true'
+		}]
 	}]
 }]
 

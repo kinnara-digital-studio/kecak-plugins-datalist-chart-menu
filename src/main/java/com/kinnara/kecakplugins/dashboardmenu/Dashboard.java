@@ -1,6 +1,5 @@
 package com.kinnara.kecakplugins.dashboardmenu;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +39,6 @@ public class Dashboard extends UserviewMenu {
 
     @Override
     public String getRenderPage() {
-    	LogUtil.info(getClassName(), "getRenderPage()");
         Map<String, Object> dataModel = new HashMap<String, Object>();
 
         ApplicationContext appContext = AppUtil.getApplicationContext();
@@ -61,6 +59,15 @@ public class Dashboard extends UserviewMenu {
         	dataModel.put("data", data);
         }
         
+        
+		try {
+			JSONArray customColors = new JSONArray(getProperty("customColors"));
+			dataModel.put("customColors", customColors);
+		} catch (JSONException e) {
+			LogUtil.error(getClassName(), e, "");
+		}        
+        
+        // sync between maxColor and minColor
         for(Object o : (Object[])getProperty("valueFields")) {
         	Map<String, String> row = (Map<String, String>)o;
         	if((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {

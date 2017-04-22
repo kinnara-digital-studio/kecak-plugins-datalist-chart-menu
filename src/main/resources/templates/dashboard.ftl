@@ -1,9 +1,7 @@
-<script src="https://d3js.org/d3.v4.min.js"></script>
 <script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/chart.js/dist/Chart.js"></script>
 <script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/underscore/underscore-min.js"></script>
 
 <script>
-	
 	$('document').ready(function() {
 		function hexToRGB(hex, alpha) {
 			hex = hex.replace(/^#/, '');
@@ -18,15 +16,21 @@
 		    }
 		}
 		
-		function calculateColor(maxValue, minValue, maxHexColor, minHexColor, value) {
-			var percentage = (maxValue == minValue) ? 0 : ((value - minValue) / (maxValue - minValue));
-			maxHexColor = maxHexColor.replace(/^#/, '');
-			minHexColor = minHexColor.replace(/^#/, '');
+		function calculateColor(maxValue, minValue, maxHexColor, minHexColor, value, label) {			
+			var customColor = _.findWhere(${customColors!}, { "labelValue" : label });
 			
-			var r = calculateColorComponent(parseInt(maxHexColor.slice(0, 2), 16), parseInt(minHexColor.slice(0, 2), 16), percentage),
-		        g = calculateColorComponent(parseInt(maxHexColor.slice(2, 4), 16), parseInt(minHexColor.slice(2, 4), 16), percentage),
-		        b = calculateColorComponent(parseInt(maxHexColor.slice(4, 6), 16), parseInt(minHexColor.slice(4, 6), 16), percentage);
-			return "rgb(" + r + ", " + g + ", " + b + ")"; 			
+			if(customColor) {
+				return hexToRGB(customColor.color);
+			} else {
+				var percentage = (maxValue == minValue) ? 0 : ((value - minValue) / (maxValue - minValue));
+				maxHexColor = maxHexColor.replace(/^#/, '');
+				minHexColor = minHexColor.replace(/^#/, '');
+				
+				var r = calculateColorComponent(parseInt(maxHexColor.slice(0, 2), 16), parseInt(minHexColor.slice(0, 2), 16), percentage),
+			        g = calculateColorComponent(parseInt(maxHexColor.slice(2, 4), 16), parseInt(minHexColor.slice(2, 4), 16), percentage),
+			        b = calculateColorComponent(parseInt(maxHexColor.slice(4, 6), 16), parseInt(minHexColor.slice(4, 6), 16), percentage);
+				return "rgb(" + r + ", " + g + ", " + b + ")"; 	
+			}		
 		}
 		
 		function calculateColorComponent(max, min, percentage) {
@@ -50,8 +54,9 @@
 								data : _.map(arrData, item => item.${row.field})
 								<#if row.maxColor?? && row.maxColor != ''>
 									,
-									<#if element.properties.chartType! == 'line'>
-										borderColor	: _.map(arrData, item => hexToRGB('${row.maxColor!}'))
+									<#if element.properties.chartType! == 'line' || element.properties.chartType! == 'radar'>
+										borderColor	: hexToRGB('${row.maxColor!}'),
+										backgroundColor : hexToRGB('${row.maxColor!}', 0.1)
 									<#else>
 										<#-- backgroundColor : _.map(data, item => hexToRGB('${row.maxColor!}')) -->
 										backgroundColor : _.map(arrData, item => calculateColor(
@@ -59,7 +64,8 @@
 																Math.min(..._.map(arrData, item => item.${row.field})),
 																'${row.maxColor!}',
 																'${row.minColor!}',
-																parseFloat(item.${row.field!})))
+																parseFloat(item.${row.field!}),
+																item.${element.properties.labelField}))
 									</#if>
 								</#if>
 							}
@@ -84,4 +90,4 @@
 	});
 </script>
 
-<canvas id="dashboard-menu" height="100%" width="100%"></canvas>
+<canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
