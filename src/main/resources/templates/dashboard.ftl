@@ -1,4 +1,4 @@
-<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/chart.js/dist/Chart.js"></script>
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/chart.js/dist/Chart.min.js"></script>
 <script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/underscore/underscore-min.js"></script>
 
 <script>
@@ -50,7 +50,7 @@
 						<#list element.properties.valueFields! as row>
 							<#if !first>,</#if>
 							{
-								label : '${row.field}',
+								label : '${row.label}', <#-- this field was set in java code, not from properties -->
 								data : _.map(arrData, item => item.${row.field})
 								<#if row.maxColor?? && row.maxColor != ''>
 									,
@@ -90,4 +90,6 @@
 	});
 </script>
 
+<div>${customHeader}</div>
 <canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
+<div>${customFooter}</div>
