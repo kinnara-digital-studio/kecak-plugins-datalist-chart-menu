@@ -104,6 +104,16 @@
 			label : '@@dashboardMenu.customColors.color@@',
 			required : 'true'
 		}]
+	}, {
+		name : 'customHeader',
+		label : '@@dashboardMenu.customHeader@@',
+		type : 'codeeditor',
+		mode : 'html'
+	}, {
+		name : 'customFooter',
+		label : '@@dashboardMenu.customFooter@@',
+		type : 'codeeditor',
+		mode : 'html'
 	}]
 }]
 
