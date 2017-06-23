@@ -38,9 +38,9 @@
 		}
 		
 		var arrData = ${data};
-		
-		var chart = new Chart(
-			$("canvas#dashboard-menu"),
+		var canvas 	= document.getElementById("dashboard-menu");
+		var context = canvas.getContext("2d");
+		var chart 	= new Chart(context,
 			{
 				type : '${element.properties.chartType}',
 				data : {
@@ -87,6 +87,14 @@
     			}
 			}
 		);
+
+      canvas.onclick = function (evt) {
+        var activePoints = chart.getElementsAtEvent(evt);
+        var chartData = activePoints[0]['_chart'].config.data;
+        var index = activePoints[0]['_index'];
+
+        window.open("${url}?id="+arrData[index].${element.properties.labelField});
+      };
 	});
 </script>
 

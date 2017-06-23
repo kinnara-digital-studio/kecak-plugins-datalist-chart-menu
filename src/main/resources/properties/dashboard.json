@@ -45,7 +45,12 @@
 			value : 'doughnut',
 			label : '@@dashboardMenu.chartType.doughnut@@'
 		}]
-	}]
+	},{
+		name : 'url',
+		label : 'Url on chart click',
+		type : 'textfield',
+		required : 'true'
+	},]
 }, {
 	title : '@@dashboardMenu.data@@',
 	properties : [{
