@@ -8,35 +8,35 @@
 		    var r = parseInt(hex.slice(0, 2), 16),
 		        g = parseInt(hex.slice(2, 4), 16),
 		        b = parseInt(hex.slice(4, 6), 16);
-		
+
 		    if (alpha) {
 		        return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
 		    } else {
 		        return "rgb(" + r + ", " + g + ", " + b + ")";
 		    }
 		}
-		
-		function calculateColor(maxValue, minValue, maxHexColor, minHexColor, value, label) {			
+
+		function calculateColor(maxValue, minValue, maxHexColor, minHexColor, value, label) {
 			var customColor = _.findWhere(${customColors!}, { "labelValue" : label });
-			
+
 			if(customColor) {
 				return hexToRGB(customColor.color);
 			} else {
 				var percentage = (maxValue == minValue) ? 0 : ((value - minValue) / (maxValue - minValue));
 				maxHexColor = maxHexColor.replace(/^#/, '');
 				minHexColor = minHexColor.replace(/^#/, '');
-				
+
 				var r = calculateColorComponent(parseInt(maxHexColor.slice(0, 2), 16), parseInt(minHexColor.slice(0, 2), 16), percentage),
 			        g = calculateColorComponent(parseInt(maxHexColor.slice(2, 4), 16), parseInt(minHexColor.slice(2, 4), 16), percentage),
 			        b = calculateColorComponent(parseInt(maxHexColor.slice(4, 6), 16), parseInt(minHexColor.slice(4, 6), 16), percentage);
-				return "rgb(" + r + ", " + g + ", " + b + ")"; 	
-			}		
+				return "rgb(" + r + ", " + g + ", " + b + ")";
+			}
 		}
-		
+
 		function calculateColorComponent(max, min, percentage) {
 			return parseInt(min + percentage * (max - min));
 		}
-		
+
 		var arrData = ${data};
 		var canvas 	= document.getElementById("dashboard-menu");
 		var context = canvas.getContext("2d");
@@ -69,7 +69,7 @@
 									</#if>
 								</#if>
 							}
-							
+
 							<#assign first = false>
 						</#list>
 					]
@@ -93,7 +93,12 @@
         var chartData = activePoints[0]['_chart'].config.data;
         var index = activePoints[0]['_index'];
 
-        window.open("${url}?id="+arrData[index].${element.properties.labelField});
+        var parameter = {};
+		<#list element.properties.chartAction! as each>
+		parameter.${each.chartKey} = arrData[index].${each.chartValue};
+		</#list>
+
+        window.open("${element.properties.chartURL}?"+$.param(parameter));
       };
 	});
 </script>
