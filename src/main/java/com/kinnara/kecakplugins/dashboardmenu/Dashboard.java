@@ -81,6 +81,7 @@ public class Dashboard extends UserviewMenu {
         
         dataModel.put("className", getClassName());
         dataModel.put("element", this);
+        dataModel.put("url", getPropertyString("url"));
 
         String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/dashboard.ftl", "/messages/dashboard");
         return htmlContent;
