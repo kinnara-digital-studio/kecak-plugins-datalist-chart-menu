@@ -88,18 +88,20 @@
 			}
 		);
 
+	<#if element.properties.chartURL! != ''>
       canvas.onclick = function (evt) {
         var activePoints = chart.getElementsAtEvent(evt);
         var chartData = activePoints[0]['_chart'].config.data;
         var index = activePoints[0]['_index'];
 
         var parameter = {};
-		<#list element.properties.chartAction! as each>
-		parameter.${each.chartKey} = arrData[index].${each.chartValue};
-		</#list>
+		  <#list element.properties.chartAction! as each>
+            parameter.${each.chartKey} = arrData[index].${each.chartValue};
+		  </#list>
 
         window.open("${element.properties.chartURL}?"+$.param(parameter));
       };
+	</#if>
 	});
 </script>
 

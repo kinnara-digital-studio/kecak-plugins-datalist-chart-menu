@@ -73,7 +73,6 @@
         name: 'chartAction',
         label: 'Chart onclick parameter',
         type: 'grid',
-        required: 'true',
         columns: [
           {
             key: 'chartKey',
@@ -82,7 +81,7 @@
           },
           {
             key: 'chartValue',
-            label: 'Parameter Value',
+            label: 'Parameter Field',
             required: 'true'
           }
         ]
