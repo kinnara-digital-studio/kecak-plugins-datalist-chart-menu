@@ -50,7 +50,7 @@
 						<#list element.properties.valueFields! as row>
 							<#if !first>,</#if>
 							{
-								label : '${row.field}', <#-- this field was set in java code, not from properties -->
+								label : '${row.label}', <#-- this field was set in java code, not from properties -->
 								data : _.map(arrData, item => item.${row.field})
 								<#if row.maxColor?? && row.maxColor != ''>
 									,
@@ -105,4 +105,7 @@
 	});
 </script>
 
+<div>${customHeader}</div>
 <canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
+<div>${customFooter}</div>
+

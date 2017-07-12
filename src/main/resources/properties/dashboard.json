@@ -62,33 +62,6 @@
     ]
   },
   {
-    title: 'Chart Action',
-    properties: [
-      {
-        name: 'chartURL',
-        label: 'Chart onclick url',
-        type: 'textfield'
-      },
-      {
-        name: 'chartAction',
-        label: 'Chart onclick parameter',
-        type: 'grid',
-        columns: [
-          {
-            key: 'chartKey',
-            label: 'Parameter Key',
-            required: 'true'
-          },
-          {
-            key: 'chartValue',
-            label: 'Parameter Field',
-            required: 'true'
-          }
-        ]
-      }
-    ]
-  },
-  {
     title: '@@dashboardMenu.data@@',
     properties: [
       {
@@ -167,6 +140,33 @@
         label: '@@dashboardMenu.customFooter@@',
         type: 'codeeditor',
         mode: 'html'
+      }
+    ]
+  },
+  {
+    title: '@@dashboardMenu.chartAction@@',
+    properties: [
+      {
+        name: 'chartURL',
+        label: 'URL',
+        type: 'textfield'
+      },
+      {
+        name: 'chartAction',
+        label: '@@dashboardMenu.parameter@@',
+        type: 'grid',
+        columns: [
+          {
+            key: 'chartKey',
+            label: '@@dashboardMenu.parameter.key@@',
+            required: 'true'
+          },
+          {
+            key: 'chartValue',
+            label: '@@dashboardMenu.parameter.field@@',
+            required: 'true'
+          }
+        ]
       }
     ]
   }
