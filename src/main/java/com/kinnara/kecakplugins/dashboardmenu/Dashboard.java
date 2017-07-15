@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
@@ -15,6 +16,7 @@ import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.apps.datalist.model.DataListColumn;
 import org.joget.apps.datalist.model.DataListColumnFormat;
+import org.joget.apps.datalist.model.DataListFilter;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
@@ -120,8 +122,27 @@ public class Dashboard extends UserviewMenu {
 		dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
 		dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
 
+		// filter template
+		LogUtil.warn(getClassName(), "filter");
+		for(DataListFilter filter : dataList.getFilters()) {
+			LogUtil.warn(getClassName(), filter.getName());
+		}
+		
+		LogUtil.warn(getClassName(), "filterTemplate");
+		List<String> filterTemplates = new ArrayList<String>();
+		
+		Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
+		for(String filterTemplate : dataList.getFilterTemplates()) {
+			LogUtil.warn(getClassName(), filterTemplate);
+			if(!pagePattern.matcher(filterTemplate).find()) {
+				filterTemplates.add(filterTemplate);
+			}
+		}
+		
+		dataModel.put("dataListId", dataList.getId());
+		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
 
-		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/dashboard.ftl", "/messages/dashboard");
+		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/Dashboard.ftl", "/messages/Dashboard");
 		return htmlContent;
 	}
 
