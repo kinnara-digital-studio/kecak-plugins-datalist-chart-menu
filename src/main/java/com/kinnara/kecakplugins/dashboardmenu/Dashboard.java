@@ -198,8 +198,19 @@ public class Dashboard extends UserviewMenu {
 					// parameter is one of the filter
 					DataListFilterQueryObject filter = new DataListFilterQueryObject();
 					filter.setOperator("AND");
-					filter.setQuery(entry.getKey() + "=?");
-					filter.setValues(entry.getValue() instanceof String[] ? ((String[])entry.getValue()) : new String[] {entry.getValue().toString()});
+					// this is the default pattern of datalist filter query is "lower([field]) like lower(?)"
+					filter.setQuery("lower(" + entry.getKey() + ") like lower(?)");
+					if(entry.getValue() instanceof String[]) {
+						String[] parameterValues = (String[])entry.getValue();
+						String[] values = new String[parameterValues.length];
+						for(int i = 0, size = parameterValues.length; i< size; i++) {
+							// this is the default pattern of datalist filter value is %[value]%
+							values[i] = "%" + parameterValues[i] + "%";
+						}
+						filter.setValues(values);
+					} else {
+						filter.setValues( new String[] { "%" + entry.getValue().toString() + "%"});	
+					}
 					dataList.addFilterQueryObject(filter);
 				} catch(Exception e) {
 					LogUtil.error(getClassName(), e, "Error creating filter [" + entry.getKey() + "]");
