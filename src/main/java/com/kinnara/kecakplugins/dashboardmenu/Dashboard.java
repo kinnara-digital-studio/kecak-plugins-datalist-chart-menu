@@ -177,7 +177,7 @@ public class Dashboard extends UserviewMenu {
 	}
 
 	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClass().getName(), "/properties/dashboard.json", null, true, "/messages/dashboard");
+		return AppUtil.readPluginResource(getClass().getName(), "/properties/Dashboard.json", null, true, "/messages/Dashboard");
 	}
 
 	private DataList getDataList(String datalistId) {
