@@ -112,6 +112,16 @@
         required: 'true'
       },
       {
+      	name : 'showFilter',
+      	label : '@@dashboardMenu.showFilter@@',
+      	description : '@@dashboardMenu.showFilter.description@@',
+      	value : 'true',
+      	type : 'checkbox',
+      	options : [
+      		{value : 'true', label : ''}
+      	]
+      },
+      {
         name: 'customColors',
         label: '@@dashboardMenu.customColors@@',
         description: '@@dashboardMenu.customColors.description@@',

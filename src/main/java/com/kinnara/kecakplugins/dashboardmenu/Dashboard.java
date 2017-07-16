@@ -123,24 +123,19 @@ public class Dashboard extends UserviewMenu {
 		dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
 
 		// filter template
-		LogUtil.warn(getClassName(), "filter");
-		for(DataListFilter filter : dataList.getFilters()) {
-			LogUtil.warn(getClassName(), filter.getName());
-		}
-		
-		LogUtil.warn(getClassName(), "filterTemplate");
 		List<String> filterTemplates = new ArrayList<String>();
 		
 		Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
 		for(String filterTemplate : dataList.getFilterTemplates()) {
-			LogUtil.warn(getClassName(), filterTemplate);
 			if(!pagePattern.matcher(filterTemplate).find()) {
 				filterTemplates.add(filterTemplate);
 			}
 		}
+
+		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
+		dataModel.put("showDataListFilter", dataList.getFilters().length > 0 && "true".equals(getPropertyString("showFilter")));
 		
 		dataModel.put("dataListId", dataList.getId());
-		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
 
 		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/Dashboard.ftl", "/messages/Dashboard");
 		return htmlContent;

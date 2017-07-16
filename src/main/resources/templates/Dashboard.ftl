@@ -106,18 +106,20 @@
 </script>
 
 <div>${customHeader}</div>
-<form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
-    <div class="filters">
-        <#list filterTemplates! as template>
-            <span class="filter-cell">
-                ${template}
-            </span>
-        </#list>
-         <span class="filter-cell">
-             <input type="submit" value="Show"/>
-         </span>
-    </div>
-</form>
+<#if showDataListFilter >
+	<form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
+	    <div class="filters">
+	        <#list filterTemplates! as template>
+	            <span class="filter-cell">
+	                ${template}
+	            </span>
+	        </#list>
+	         <span class="filter-cell">
+	             <input type="submit" value="Show"/>
+	         </span>
+	    </div>
+	</form>
+</#if>
 <canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
 <div>${customFooter}</div>
 
