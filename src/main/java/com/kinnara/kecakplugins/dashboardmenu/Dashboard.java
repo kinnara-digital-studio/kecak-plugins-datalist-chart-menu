@@ -16,7 +16,6 @@ import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.apps.datalist.model.DataListColumn;
 import org.joget.apps.datalist.model.DataListColumnFormat;
-import org.joget.apps.datalist.model.DataListFilter;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
