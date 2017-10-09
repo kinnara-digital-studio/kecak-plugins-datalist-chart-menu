@@ -51,7 +51,7 @@ public class Dashboard extends UserviewMenu {
 		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
 
 		DataList dataList = getDataList(getPropertyString("dataListId"));
-		getCollectFilters(dataList);
+		getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
 
 		if (dataList != null) {
 			DataListCollection<Map<String, String>> collections = dataList.getRows();
@@ -192,9 +192,7 @@ public class Dashboard extends UserviewMenu {
 		return null;
 	}
 
-	private void getCollectFilters(DataList dataList) {
-		List<DataListFilterQueryObject> result = new ArrayList<DataListFilterQueryObject>();
-
+	private void getCollectFilters(DataList dataList, Map<String, Object> requestParameters) {
 		DataListColumn[] columns = dataList.getColumns();
 
 		Comparator<DataListColumn> comparator = new Comparator<DataListColumn>() {
@@ -205,7 +203,7 @@ public class Dashboard extends UserviewMenu {
 
 		Arrays.sort(columns, comparator);
 		DataListColumn key = new DataListColumn();
-		for(Map.Entry<String, Object> entry : ((Map<String, Object>)getRequestParameters()).entrySet()) {
+		for(Map.Entry<String, Object> entry : requestParameters.entrySet()) {
 			key.setName(entry.getKey());
 			int index = Arrays.binarySearch(columns, key, comparator);
 			if(index >= 0) {
