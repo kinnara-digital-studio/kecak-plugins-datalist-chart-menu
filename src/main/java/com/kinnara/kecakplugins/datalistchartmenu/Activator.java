@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.dashboardmenu;
+package com.kinnara.kecakplugins.datalistchartmenu;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +14,7 @@ public class Activator implements BundleActivator {
         registrationList = new ArrayList<ServiceRegistration>();
 
         //Register plugin here
-        registrationList.add(context.registerService(Dashboard.class.getName(), new Dashboard(), null));
+        registrationList.add(context.registerService(DataListChartUserviewMenu.class.getName(), new DataListChartUserviewMenu(), null));
     }
 
     public void stop(BundleContext context) {

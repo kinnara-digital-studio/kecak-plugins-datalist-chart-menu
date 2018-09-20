@@ -1,11 +1,6 @@
-package com.kinnara.kecakplugins.dashboardmenu;
+package com.kinnara.kecakplugins.datalistchartmenu;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.joget.apps.app.dao.DatalistDefinitionDao;
@@ -29,9 +24,9 @@ import org.springframework.context.ApplicationContext;
 /**
  * @author aristo
  */
-public class Dashboard extends UserviewMenu {
+public class DataListChartUserviewMenu extends UserviewMenu {
 
-	private Map<String, DataList> datalistCache = new HashMap<String, DataList>();
+	private WeakHashMap<String, DataList> datalistCache = new WeakHashMap<>();
 
 	@Override
 	public String getCategory() {
@@ -51,9 +46,8 @@ public class Dashboard extends UserviewMenu {
 		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
 
 		DataList dataList = getDataList(getPropertyString("dataListId"));
-		getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
-
 		if (dataList != null) {
+			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
 			DataListCollection<Map<String, String>> collections = dataList.getRows();
 			JSONArray                               data        = new JSONArray();
 			for(Map<String, String> row : collections) {        		
@@ -80,7 +74,6 @@ public class Dashboard extends UserviewMenu {
 
 			dataModel.put("data", data);
 		}
-
 
 		try {
 			JSONArray customColors = new JSONArray(getProperty("customColors"));
@@ -136,7 +129,7 @@ public class Dashboard extends UserviewMenu {
 		
 		dataModel.put("dataListId", dataList.getId());
 
-		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/Dashboard.ftl", "/messages/Dashboard");
+		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/DataListChartUserviewMenu.ftl", "/messages/DataListChartUserviewMenu");
 		return htmlContent;
 	}
 
@@ -151,7 +144,7 @@ public class Dashboard extends UserviewMenu {
 	}
 
 	public String getName() {
-		return "Dashboard";
+		return "DataListChartUserviewMenu";
 	}
 
 	public String getVersion() {
@@ -171,7 +164,7 @@ public class Dashboard extends UserviewMenu {
 	}
 
 	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClass().getName(), "/properties/Dashboard.json", null, true, "/messages/Dashboard");
+		return AppUtil.readPluginResource(getClass().getName(), "/properties/DataListChartUserviewMenu.json", null, true, "/messages/DataListChartUserviewMenu");
 	}
 
 	private DataList getDataList(String datalistId) {
@@ -195,11 +188,7 @@ public class Dashboard extends UserviewMenu {
 	private void getCollectFilters(DataList dataList, Map<String, Object> requestParameters) {
 		DataListColumn[] columns = dataList.getColumns();
 
-		Comparator<DataListColumn> comparator = new Comparator<DataListColumn>() {
-			public int compare(DataListColumn o1, DataListColumn o2) {
-				return o1.getName().compareTo(o2.getName());
-			}	  
-		};
+		Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
 
 		Arrays.sort(columns, comparator);
 		DataListColumn key = new DataListColumn();
