@@ -1,4 +1,4 @@
-# Dashboard Menu #
+# DataList Chart Menu #
 
 Userview menu to create charts from DataList
 
