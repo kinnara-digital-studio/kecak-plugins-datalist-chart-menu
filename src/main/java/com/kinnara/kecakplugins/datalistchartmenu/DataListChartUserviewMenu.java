@@ -48,7 +48,7 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 		DataList dataList = getDataList(getPropertyString("dataListId"));
 		if (dataList != null) {
 			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
-			DataListCollection<Map<String, String>> collections = dataList.getRows();
+			DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
 			JSONArray                               data        = new JSONArray();
 			for(Map<String, String> row : collections) {        		
 				try {
@@ -144,7 +144,7 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 	}
 
 	public String getName() {
-		return "DataListChartUserviewMenu";
+		return "DataList Chart Menu";
 	}
 
 	public String getVersion() {
