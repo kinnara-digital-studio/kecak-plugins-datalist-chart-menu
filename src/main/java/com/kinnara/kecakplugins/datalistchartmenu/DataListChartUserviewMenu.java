@@ -144,7 +144,7 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 	}
 
 	public String getName() {
-		return "DataList Chart Menu";
+		return "DataList Chart";
 	}
 
 	public String getVersion() {
