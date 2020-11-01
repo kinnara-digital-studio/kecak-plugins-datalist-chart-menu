@@ -101,14 +101,4 @@
         
         <!-- End change plugin specific dependencies here -->
     </dependencies>
-    <distributionManagement>
-        <repository>
-            <id>internal</id>
-            <url>http://dev.joget.org/archiva/repository/internal</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>http://dev.joget.org/archiva/repository/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
