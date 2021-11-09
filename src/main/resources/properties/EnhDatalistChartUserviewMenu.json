@@ -1,0 +1,200 @@
+[
+  {
+    "title": "@@dashboardMenu.title@@",
+    "properties": [
+      {
+        "name": "id",
+        "label": "Id",
+        "type": "hidden"
+      },
+      {
+        "name": "customId",
+        "label": "@@dashboardMenu.customId@@",
+        "type": "textfield",
+        "regex_validation": "^[a-zA-Z0-9_]+$",
+        "validation_message": "@@dashboardMenu.invalidId@@"
+      },
+      {
+        "name": "label",
+        "label": "@@dashboardMenu.label@@",
+        "type": "textfield",
+        "required": "true"
+      },
+      {
+        "name": "dataListId",
+        "label": "@@dashboardMenu.dataListId@@",
+        "type": "selectbox",
+        "required": "true",
+        "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options"
+      },
+      {
+        "name": "chartType",
+        "label": "@@dashboardMenu.chartType@@",
+        "type": "selectbox",
+        "required": "true",
+        "options": [
+          {
+            "value": "bar",
+            "label": "@@dashboardMenu.chartType.bar@@"
+          },
+          {
+            "value": "line",
+            "label": "@@dashboardMenu.chartType.line@@"
+          },
+          {
+            "value": "polarArea",
+            "label": "@@dashboardMenu.chartType.polarArea@@"
+          },
+          {
+            "value": "radar",
+            "label": "@@dashboardMenu.chartType.radar@@"
+          },
+          {
+            "value": "pie",
+            "label": "@@dashboardMenu.chartType.pie@@"
+          },
+          {
+            "value": "doughnut",
+            "label": "@@dashboardMenu.chartType.doughnut@@"
+          }
+        ]
+      },
+      {
+        "name": "chartPosition",
+        "label": "@@dashboardMenu.chartPosition@@",
+        "type": "selectbox",
+        "required": "true",
+        "options": [
+          {
+            "value": "below",
+            "label": "@@dashboardMenu.chartBelowList@@"
+          },
+          {
+            "value": "above",
+            "label": "@@dashboardMenu.chartAboveList@@"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "@@dashboardMenu.data@@",
+    "properties": [
+      {
+        "name": "labelField",
+        "label": "@@dashboardMenu.labelField@@",
+        "description": "@@dashboardMenu.labelField.description@@",
+        "type": "textfield"
+      },
+      {
+        "name": "valueFields",
+        "label": "@@dashboardMenu.valueField@@",
+        "description": "@@dashboardMenu.valueField.description@@",
+        "type": "grid",
+        "required": "true",
+        "columns": [
+          {
+            "key": "field",
+            "label": "@@dashboardMenu.valueField.field@@",
+            "required": "true"
+          },
+          {
+            "key": "maxColor",
+            "label": "@@dashboardMenu.valueField.maxColor@@"
+          },
+          {
+            "key": "minColor",
+            "label": "@@dashboardMenu.valueField.minColor@@"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "@@dashboardMenu.ui@@",
+    "properties": [
+      {
+        "name": "width",
+        "label": "@@dashboardMenu.width@@",
+        "type": "textfield",
+        "value": "100%",
+        "required": "true"
+      },
+      {
+        "name": "height",
+        "label": "@@dashboardMenu.height@@",
+        "type": "textfield",
+        "value": "100%",
+        "required": "true"
+      },
+      {
+      	"name" : "showFilter",
+      	"label" : "@@dashboardMenu.showFilter@@",
+      	"description" : "@@dashboardMenu.showFilter.description@@",
+      	"value" : "true",
+      	"type" : "checkbox",
+      	"options" : [
+      		{"value" : "true", "label" : ""}
+      	]
+      },
+      {
+        "name": "customColors",
+        "label": "@@dashboardMenu.customColors@@",
+        "description": "@@dashboardMenu.customColors.description@@",
+        "type": "grid",
+        "columns": [
+          {
+            "key": "labelValue",
+            "label": "@@dashboardMenu.customColors.labelValue@@",
+            "required": "true"
+          },
+          {
+            "key": "color",
+            "label": "@@dashboardMenu.customColors.color@@",
+            "required": "true"
+          }
+        ]
+      },
+      {
+        "name": "customHeader",
+        "label": "@@dashboardMenu.customHeader@@",
+        "type": "codeeditor",
+        "mode": "html"
+      },
+      {
+        "name": "customFooter",
+        "label": "@@dashboardMenu.customFooter@@",
+        "type": "codeeditor",
+        "mode": "html"
+      }
+    ]
+  },
+  {
+    "title": "@@dashboardMenu.chartAction@@",
+    "properties": [
+      {
+        "name": "chartURL",
+        "label": "URL",
+        "type": "textfield"
+      },
+      {
+        "name": "chartAction",
+        "label": "@@dashboardMenu.parameter@@",
+        "type": "grid",
+        "columns": [
+          {
+            "key": "chartKey",
+            "label": "@@dashboardMenu.parameter.key@@",
+            "required": "true"
+          },
+          {
+            "key": "chartValue",
+            "label": "@@dashboardMenu.parameter.field@@",
+            "required": "true"
+          }
+        ]
+      }
+    ]
+  }
+]
+

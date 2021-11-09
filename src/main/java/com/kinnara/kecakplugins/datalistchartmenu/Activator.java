@@ -15,6 +15,7 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(DataListChartUserviewMenu.class.getName(), new DataListChartUserviewMenu(), null));
+        registrationList.add(context.registerService(EnhDatalistChartUserviewMenu.class.getName(), new EnhDatalistChartUserviewMenu(), null));
     }
 
     public void stop(BundleContext context) {
