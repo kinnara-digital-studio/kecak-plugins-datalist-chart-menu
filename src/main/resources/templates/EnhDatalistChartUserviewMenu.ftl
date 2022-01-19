@@ -108,6 +108,7 @@
 </script>
 
 <div>${customHeader}</div>
+
 <#if showDataListFilter >
 	<form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
 	    <div class="filters">
@@ -122,27 +123,30 @@
 	    </div>
 	</form>
 </#if>
+
 <#if element.properties.chartPosition! != 'above'>
 	<div class="table-responsive">
 		<table id="aboveData" class="display" style="width:100%">
 			<thead>
       			<tr>
 		          <#list tHead! as head>
-		          	<th>${head}</th>
+		          	<th>${head.label}</th>
 		          </#list>
       			</tr>
   			</thead>
 		</table>
 	</div>
 </#if>
+
 <canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
+
 <#if element.properties.chartPosition! != 'below'>
 	<div class="table-responsive">
 		<table id="belowData" class="display" style="width:100%">
 			<thead>
       			<tr>
 		          <#list tHead! as head>
-		          	<th>${head}</th>
+		          	<th>${head.label}</th>
 		          </#list>
       			</tr>
   			</thead>
@@ -155,25 +159,20 @@
 $(document).ready(function() {
 	var arrData = ${data};
 	
-<#if element.properties.chartPosition! != 'above'>
-	$('#aboveData').DataTable({
+    <#if element.properties.chartPosition! != 'above'>
+        <#assign selector='#aboveData'>
+    <#else>
+        <#assign selector='#belowData'>
+    </#if>
+
+    $('${selector}').DataTable({
 		"data": arrData,
 		"columns" : [
 			<#list tHead! as head>
-				 { "data" : "${head}" },
+				 { "data" : "${head.name}" },
 			</#list>
         ]
 	});
-<#else>
-	$('#belowData').DataTable({
-		"data": arrData,
-		"columns" : [
-			<#list tHead! as head>
-				 { "data" : "${head}" },
-			</#list>
-        ]
-	});
-</#if>
 });
 </script>
 

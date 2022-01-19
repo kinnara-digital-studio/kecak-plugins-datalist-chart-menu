@@ -113,42 +113,40 @@ public class EnhDatalistChartUserviewMenu extends UserviewMenu{
 		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
 
 		DataList dataList = getDataList(getPropertyString("dataListId"));
+		assert dataList != null;
+
 		DataListColumn[] dataColumns= dataList.getColumns();
-		ArrayList<String> arrColumn = new ArrayList<String>();
-		for (DataListColumn dataListColumn : dataColumns) {
-			arrColumn.add(dataListColumn.getName());
-		}
+		List<DataListColumn> arrColumn = new ArrayList<>(Arrays.asList(dataColumns));
 		dataModel.put("tHead", arrColumn);
-		if (dataList != null) {
-			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
-			DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
-			JSONArray data = new JSONArray();
-			for(Map<String, String> row : collections) {        		
-				try {
-					JSONObject jsonRow = new JSONObject();
-					for(String field : row.keySet()) {
-						if(arrColumn.contains(field)) {
-							String value = format(dataList, row, field);
-							if(value != null)
-								jsonRow.put(field, value);
-							else if(row.get(field) != null)
-								jsonRow.put(field, row.get(field));
-						}
+
+		getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
+		DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
+		JSONArray data = new JSONArray();
+		for(Map<String, String> row : collections) {
+			try {
+				JSONObject jsonRow = new JSONObject();
+				for(String field : row.keySet()) {
+					if(arrColumn.stream().map(DataListColumn::getName).anyMatch(field::equals)) {
+						String value = format(dataList, row, field);
+						if(value != null)
+							jsonRow.put(field, value);
+						else if(row.get(field) != null)
+							jsonRow.put(field, row.get(field));
 					}
-					data.put(jsonRow);
-				} catch (JSONException e) {
-					data.put(new JSONObject(row));
-					LogUtil.error(getClassName(), e, "");
 				}
+				data.put(jsonRow);
+			} catch (JSONException e) {
+				data.put(new JSONObject(row));
+				LogUtil.error(getClassName(), e, "");
 			}
-
-
-			// use datalist's primary key if label field not specified
-			if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
-				setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
-			dataModel.put("data", data);
 		}
-		
+
+
+		// use datalist's primary key if label field not specified
+		if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
+			setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+		dataModel.put("data", data);
+
 		try {
 			JSONArray customColors = new JSONArray(getProperty("customColors"));
 			dataModel.put("customColors", customColors);
