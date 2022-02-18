@@ -107,6 +107,11 @@
 
 <div>${customHeader}</div>
 <#if showDataListFilter >
+    <style>
+        .filters { text-align:right; font-size:smaller }
+        .filter-cell{display:inline-block;padding-left:5px;}
+    </style>
+
 	<form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
 	    <div class="filters">
 	        <#list filterTemplates! as template>
