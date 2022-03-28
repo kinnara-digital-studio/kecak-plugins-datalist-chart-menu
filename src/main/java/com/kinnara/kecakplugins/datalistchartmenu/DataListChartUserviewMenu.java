@@ -19,12 +19,14 @@ import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.kecak.apps.userview.model.AceUserviewMenu;
+import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 /**
  * @author aristo
  */
-public class DataListChartUserviewMenu extends UserviewMenu {
+public class DataListChartUserviewMenu extends UserviewMenu implements AceUserviewMenu {
 
 	private WeakHashMap<String, DataList> datalistCache = new WeakHashMap<>();
 
@@ -211,7 +213,7 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 						}
 						filter.setValues(values);
 					} else {
-						filter.setValues( new String[] { "%" + entry.getValue().toString() + "%"});	
+						filter.setValues( new String[] { "%" + entry.getValue().toString() + "%"});
 					}
 					dataList.addFilterQueryObject(filter);
 				} catch(Exception e) {
@@ -238,6 +240,107 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 				}
 			}
 		}
+		return null;
+	}
+
+	@Override
+	public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
+		return null;
+	}
+
+	@Override
+	public String getAceRenderPage() {
+		Map<String, Object> dataModel = new HashMap<>();
+
+		ApplicationContext appContext    = AppUtil.getApplicationContext();
+		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
+
+		DataList dataList = getDataList(getPropertyString("dataListId"));
+		if (dataList != null) {
+			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
+			DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
+			JSONArray data = new JSONArray();
+			for(Map<String, String> row : collections) {
+				try {
+					JSONObject jsonRow = new JSONObject();
+					for(String field : row.keySet()) {
+						String value = format(dataList, row, field);
+						if(value != null)
+							jsonRow.put(field, value);
+						else if(row.get(field) != null)
+							jsonRow.put(field, row.get(field));
+					}
+					data.put(jsonRow);
+				} catch (JSONException e) {
+					data.put(new JSONObject(row));
+					LogUtil.error(getClassName(), e, "");
+				}
+			}
+
+
+			// use datalist's primary key if label field not specified
+			if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
+				setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+
+			dataModel.put("data", data);
+		}
+
+		try {
+			JSONArray customColors = new JSONArray(getProperty("customColors"));
+			dataModel.put("customColors", customColors);
+		} catch (JSONException e) {
+			LogUtil.error(getClassName(), e, "");
+		}
+
+		DataListColumn[] columns = dataList.getColumns();
+		Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
+
+		Arrays.sort(columns, comparator);
+
+		DataListColumn column = new DataListColumn();
+		// set label, sync between maxColor and minColor
+		for (Object o : (Object[]) getProperty("valueFields")) {
+			Map<String, String> row = (Map<String, String>) o;
+			if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
+				row.put("maxColor", row.get("minColor"));
+			}
+
+			if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
+				row.put("minColor", row.get("maxColor"));
+			}
+
+			column.setName(row.get("field"));
+			int index = Arrays.binarySearch(columns, column, comparator);
+			row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
+		}
+
+		dataModel.put("className", getClassName());
+		dataModel.put("element", this);
+
+		dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
+		dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
+
+		// filter template
+		List<String> filterTemplates = new ArrayList<String>();
+
+		Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
+		for(String filterTemplate : dataList.getFilterTemplates()) {
+			if(!pagePattern.matcher(filterTemplate).find()) {
+				filterTemplates.add(filterTemplate);
+			}
+		}
+
+		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
+		dataModel.put("showDataListFilter", dataList.getFilters().length > 0 && "true".equals(getPropertyString("showFilter")));
+
+		dataModel.put("dataListId", dataList.getId());
+
+		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/DataListChartUserviewMenuAceAdmin.ftl", "/messages/DataListChartUserviewMenu");
+		return htmlContent;
+	}
+
+	@Override
+	public String getAceDecoratedMenu() {
 		return null;
 	}
 }
