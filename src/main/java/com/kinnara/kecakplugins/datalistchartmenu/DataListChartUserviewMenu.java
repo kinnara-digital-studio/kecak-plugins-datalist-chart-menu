@@ -1,17 +1,10 @@
 package com.kinnara.kecakplugins.datalistchartmenu;
 
-import java.util.*;
-import java.util.regex.Pattern;
-
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.model.DataList;
-import org.joget.apps.datalist.model.DataListCollection;
-import org.joget.apps.datalist.model.DataListColumn;
-import org.joget.apps.datalist.model.DataListColumnFormat;
-import org.joget.apps.datalist.model.DataListFilterQueryObject;
+import org.joget.apps.datalist.model.*;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.LogUtil;
@@ -23,324 +16,245 @@ import org.kecak.apps.userview.model.AceUserviewMenu;
 import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
+import java.util.*;
+import java.util.regex.Pattern;
+
 /**
  * @author aristo
  */
 public class DataListChartUserviewMenu extends UserviewMenu implements AceUserviewMenu {
 
-	private WeakHashMap<String, DataList> datalistCache = new WeakHashMap<>();
+    private WeakHashMap<String, DataList> datalistCache = new WeakHashMap<>();
 
-	@Override
-	public String getCategory() {
-		return "Kecak";
-	}
+    @Override
+    public String getCategory() {
+        return "Kecak";
+    }
 
-	@Override
-	public String getIcon() {
-		return "/plugin/org.joget.apps.userview.lib.RunProcess/images/grid_icon.gif";
-	}
+    @Override
+    public String getIcon() {
+        return "/plugin/org.joget.apps.userview.lib.RunProcess/images/grid_icon.gif";
+    }
 
-	@Override
-	public String getRenderPage() {
-		Map<String, Object> dataModel = new HashMap<String, Object>();
+    @Override
+    public String getRenderPage() {
+        return getRenderPage("/templates/DataListChartUserviewMenu.ftl", "/templates/Error.ftl");
+    }
 
-		ApplicationContext appContext    = AppUtil.getApplicationContext();
-		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
+    @Override
+    public boolean isHomePageSupported() {
+        return true;
+    }
 
-		DataList dataList = getDataList(getPropertyString("dataListId"));
-		if (dataList != null) {
-			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
-			DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
-			JSONArray                               data        = new JSONArray();
-			for(Map<String, String> row : collections) {        		
-				try {
-					JSONObject jsonRow = new JSONObject();
-					for(String field : row.keySet()) {
-						String value = format(dataList, row, field);
-						if(value != null)
-							jsonRow.put(field, value);
-						else if(row.get(field) != null)
-							jsonRow.put(field, row.get(field));
-					}
-					data.put(jsonRow);
-				} catch (JSONException e) {
-					data.put(new JSONObject(row));
-					LogUtil.error(getClassName(), e, "");
-				}
-			}
+    @Override
+    public String getDecoratedMenu() {
+        return null;
+    }
 
+    public String getName() {
+        return "DataList Chart";
+    }
 
-			// use datalist's primary key if label field not specified
-			if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
-				setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+    public String getVersion() {
+        return getClass().getPackage().getImplementationVersion();
+    }
 
-			dataModel.put("data", data);
-		}
+    public String getDescription() {
+        return "Artifact ID : " + getClass().getPackage().getImplementationTitle();
+    }
 
-		try {
-			JSONArray customColors = new JSONArray(getProperty("customColors"));
-			dataModel.put("customColors", customColors);
-		} catch (JSONException e) {
-			LogUtil.error(getClassName(), e, "");
-		}
+    public String getLabel() {
+        return getName();
+    }
 
-		DataListColumn[] columns = dataList.getColumns();
-		Comparator<DataListColumn> comparator = new Comparator<DataListColumn>() {
-			public int compare(DataListColumn o1, DataListColumn o2) {
-				return o1.getName().compareTo(o2.getName());
-			}
-		};
+    public String getClassName() {
+        return getClass().getName();
+    }
 
-		Arrays.sort(columns, comparator);
+    public String getPropertyOptions() {
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/DataListChartUserviewMenu.json", null, true, "/messages/DataListChartUserviewMenu");
+    }
 
-		DataListColumn column = new DataListColumn();
-		// set label, sync between maxColor and minColor
-		for (Object o : (Object[]) getProperty("valueFields")) {
-			Map<String, String> row = (Map<String, String>) o;
-			if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
-				row.put("maxColor", row.get("minColor"));
-			}
+    private DataList getDataList(String datalistId) {
+        ApplicationContext ac = AppUtil.getApplicationContext();
+        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
 
-			if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
-				row.put("minColor", row.get("maxColor"));
-			}
+        if (datalistCache.containsKey(datalistId))
+            return datalistCache.get(datalistId);
 
-			column.setName(row.get("field"));
-			int index = Arrays.binarySearch(columns, column, comparator);
-			row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
-		}
+        DataListService dataListService = (DataListService) ac.getBean("dataListService");
+        DatalistDefinitionDao datalistDefinitionDao = (DatalistDefinitionDao) ac.getBean("datalistDefinitionDao");
+        DatalistDefinition datalistDefinition = (DatalistDefinition) datalistDefinitionDao.loadById(datalistId, appDef);
+        if (datalistDefinition != null) {
+            DataList dataList = dataListService.fromJson(datalistDefinition.getJson());
+            datalistCache.put(datalistId, dataList);
+            return dataList;
+        }
+        return null;
+    }
 
-		dataModel.put("className", getClassName());
-		dataModel.put("element", this);
+    private void getCollectFilters(DataList dataList, Map<String, Object> requestParameters) {
+        DataListColumn[] columns = dataList.getColumns();
 
-		dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
-		dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
+        Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
 
-		// filter template
-		List<String> filterTemplates = new ArrayList<String>();
-		
-		Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
-		for(String filterTemplate : dataList.getFilterTemplates()) {
-			if(!pagePattern.matcher(filterTemplate).find()) {
-				filterTemplates.add(filterTemplate);
-			}
-		}
+        Arrays.sort(columns, comparator);
+        DataListColumn key = new DataListColumn();
+        for (Map.Entry<String, Object> entry : requestParameters.entrySet()) {
+            key.setName(entry.getKey());
+            int index = Arrays.binarySearch(columns, key, comparator);
+            if (index >= 0) {
+                try {
+                    // parameter is one of the filter
+                    DataListFilterQueryObject filter = new DataListFilterQueryObject();
+                    filter.setOperator("AND");
+                    // this is the default pattern of datalist filter query is "lower([field]) like lower(?)"
+                    filter.setQuery("lower(" + entry.getKey() + ") like lower(?)");
+                    if (entry.getValue() instanceof String[]) {
+                        String[] parameterValues = (String[]) entry.getValue();
+                        String[] values = new String[parameterValues.length];
+                        for (int i = 0, size = parameterValues.length; i < size; i++) {
+                            // this is the default pattern of datalist filter value is %[value]%
+                            values[i] = "%" + parameterValues[i] + "%";
+                        }
+                        filter.setValues(values);
+                    } else {
+                        filter.setValues(new String[]{"%" + entry.getValue().toString() + "%"});
+                    }
+                    dataList.addFilterQueryObject(filter);
+                } catch (Exception e) {
+                    LogUtil.error(getClassName(), e, "Error creating filter [" + entry.getKey() + "]");
+                }
+            }
+        }
+    }
 
-		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
-		dataModel.put("showDataListFilter", dataList.getFilters().length > 0 && "true".equals(getPropertyString("showFilter")));
-		
-		dataModel.put("dataListId", dataList.getId());
+    private String format(DataList dataList, Map<String, String> row, String field) {
+        if (dataList.getColumns() != null) {
+            for (DataListColumn column : dataList.getColumns()) {
+                if (field.equals(column.getName())) {
+                    String value = String.valueOf(row.get(field));
+                    if (column.getFormats() != null) {
+                        for (DataListColumnFormat format : column.getFormats()) {
+                            if (format != null) {
+                                return format.format(dataList, column, row, value).replaceAll("<[^>]*>", "");
+                            }
+                        }
+                    } else {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
-		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/DataListChartUserviewMenu.ftl", "/messages/DataListChartUserviewMenu");
-		return htmlContent;
-	}
+    @Override
+    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
+        return null;
+    }
 
-	@Override
-	public boolean isHomePageSupported() {
-		return true;
-	}
+    @Override
+    public String getAceRenderPage() {
+        return getRenderPage("/templates/DataListChartUserviewMenuAceAdmin.ftl", "/templates/Error.ftl");
+    }
 
-	@Override
-	public String getDecoratedMenu() {
-		return null;
-	}
+    @Override
+    public String getAceDecoratedMenu() {
+        return null;
+    }
 
-	public String getName() {
-		return "DataList Chart";
-	}
+    protected String getRenderPage(String template, String errorTemplate) {
+        Map<String, Object> dataModel = new HashMap<>();
 
-	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
-	}
+        ApplicationContext appContext = AppUtil.getApplicationContext();
+        PluginManager pluginManager = (PluginManager) appContext.getBean("pluginManager");
 
-	public String getDescription() {
-		return "Artifact ID : " + getClass().getPackage().getImplementationTitle();
-	}
+        final DataList dataList = getDataList(getPropertyString("dataListId"));
+        if (dataList == null) {
+            dataModel.put("errorMessage", "DataList [" + getPropertyString("dataListId") + "] is null");
+            return pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), errorTemplate, "/messages/DataListChartUserviewMenu");
+        }
 
-	public String getLabel() {
-		return getName();
-	}
-
-	public String getClassName() {
-		return getClass().getName();
-	}
-
-	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClass().getName(), "/properties/DataListChartUserviewMenu.json", null, true, "/messages/DataListChartUserviewMenu");
-	}
-
-	private DataList getDataList(String datalistId) {
-		ApplicationContext ac     = AppUtil.getApplicationContext();
-		AppDefinition      appDef = AppUtil.getCurrentAppDefinition();
-
-		if (datalistCache.containsKey(datalistId))
-			return datalistCache.get(datalistId);
-
-		DataListService       dataListService       = (DataListService) ac.getBean("dataListService");
-		DatalistDefinitionDao datalistDefinitionDao = (DatalistDefinitionDao) ac.getBean("datalistDefinitionDao");
-		DatalistDefinition    datalistDefinition    = (DatalistDefinition) datalistDefinitionDao.loadById(datalistId, appDef);
-		if (datalistDefinition != null) {
-			DataList dataList = dataListService.fromJson(datalistDefinition.getJson());
-			datalistCache.put(datalistId, dataList);
-			return dataList;
-		}
-		return null;
-	}
-
-	private void getCollectFilters(DataList dataList, Map<String, Object> requestParameters) {
-		DataListColumn[] columns = dataList.getColumns();
-
-		Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
-
-		Arrays.sort(columns, comparator);
-		DataListColumn key = new DataListColumn();
-		for(Map.Entry<String, Object> entry : requestParameters.entrySet()) {
-			key.setName(entry.getKey());
-			int index = Arrays.binarySearch(columns, key, comparator);
-			if(index >= 0) {
-				try {
-					// parameter is one of the filter
-					DataListFilterQueryObject filter = new DataListFilterQueryObject();
-					filter.setOperator("AND");
-					// this is the default pattern of datalist filter query is "lower([field]) like lower(?)"
-					filter.setQuery("lower(" + entry.getKey() + ") like lower(?)");
-					if(entry.getValue() instanceof String[]) {
-						String[] parameterValues = (String[])entry.getValue();
-						String[] values = new String[parameterValues.length];
-						for(int i = 0, size = parameterValues.length; i< size; i++) {
-							// this is the default pattern of datalist filter value is %[value]%
-							values[i] = "%" + parameterValues[i] + "%";
-						}
-						filter.setValues(values);
-					} else {
-						filter.setValues( new String[] { "%" + entry.getValue().toString() + "%"});
-					}
-					dataList.addFilterQueryObject(filter);
-				} catch(Exception e) {
-					LogUtil.error(getClassName(), e, "Error creating filter [" + entry.getKey() + "]");
-				}
-			}
-		}
-	}
-
-	private String format(DataList dataList, Map<String, String> row, String field) {
-		if(dataList.getColumns() != null) {
-			for(DataListColumn column : dataList.getColumns()) {
-				if(field.equals(column.getName())) {
-					String value = String.valueOf(row.get(field));
-					if(column.getFormats() != null) {
-						for(DataListColumnFormat format : column.getFormats()) {
-							if(format != null) {
-								return format.format(dataList, column, row, value).replaceAll("<[^>]*>", "");
-							}
-						}
-					} else {
-						return value;
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
-		return null;
-	}
-
-	@Override
-	public String getAceRenderPage() {
-		Map<String, Object> dataModel = new HashMap<>();
-
-		ApplicationContext appContext    = AppUtil.getApplicationContext();
-		PluginManager      pluginManager = (PluginManager) appContext.getBean("pluginManager");
-
-		DataList dataList = getDataList(getPropertyString("dataListId"));
-		if (dataList != null) {
-			getCollectFilters(dataList, ((Map<String, Object>)getRequestParameters()));
-			DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
-			JSONArray data = new JSONArray();
-			for(Map<String, String> row : collections) {
-				try {
-					JSONObject jsonRow = new JSONObject();
-					for(String field : row.keySet()) {
-						String value = format(dataList, row, field);
-						if(value != null)
-							jsonRow.put(field, value);
-						else if(row.get(field) != null)
-							jsonRow.put(field, row.get(field));
-					}
-					data.put(jsonRow);
-				} catch (JSONException e) {
-					data.put(new JSONObject(row));
-					LogUtil.error(getClassName(), e, "");
-				}
-			}
+        getCollectFilters(dataList, ((Map<String, Object>) getRequestParameters()));
+        DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
+        JSONArray data = new JSONArray();
+        for (Map<String, String> row : collections) {
+            try {
+                JSONObject jsonRow = new JSONObject();
+                for (String field : row.keySet()) {
+                    String value = format(dataList, row, field);
+                    if (value != null)
+                        jsonRow.put(field, value);
+                    else if (row.get(field) != null)
+                        jsonRow.put(field, row.get(field));
+                }
+                data.put(jsonRow);
+            } catch (JSONException e) {
+                data.put(new JSONObject(row));
+                LogUtil.error(getClassName(), e, "");
+            }
+        }
 
 
-			// use datalist's primary key if label field not specified
-			if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
-				setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+        // use datalist's primary key if label field not specified
+        if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
+            setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
 
-			dataModel.put("data", data);
-		}
+        dataModel.put("data", data);
 
-		try {
-			JSONArray customColors = new JSONArray(getProperty("customColors"));
-			dataModel.put("customColors", customColors);
-		} catch (JSONException e) {
-			LogUtil.error(getClassName(), e, "");
-		}
+        try {
+            JSONArray customColors = new JSONArray(getProperty("customColors"));
+            dataModel.put("customColors", customColors);
+        } catch (JSONException e) {
+            LogUtil.error(getClassName(), e, "");
+        }
 
-		DataListColumn[] columns = dataList.getColumns();
-		Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
+        DataListColumn[] columns = dataList.getColumns();
+        Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
 
-		Arrays.sort(columns, comparator);
+        Arrays.sort(columns, comparator);
 
-		DataListColumn column = new DataListColumn();
-		// set label, sync between maxColor and minColor
-		for (Object o : (Object[]) getProperty("valueFields")) {
-			Map<String, String> row = (Map<String, String>) o;
-			if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
-				row.put("maxColor", row.get("minColor"));
-			}
+        final DataListColumn column = new DataListColumn();
 
-			if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
-				row.put("minColor", row.get("maxColor"));
-			}
+        // set label, sync between maxColor and minColor
+        for (Object o : (Object[]) getProperty("valueFields")) {
+            Map<String, String> row = (Map<String, String>) o;
+            if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
+                row.put("maxColor", row.get("minColor"));
+            }
 
-			column.setName(row.get("field"));
-			int index = Arrays.binarySearch(columns, column, comparator);
-			row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
-		}
+            if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
+                row.put("minColor", row.get("maxColor"));
+            }
 
-		dataModel.put("className", getClassName());
-		dataModel.put("element", this);
+            column.setName(row.get("field"));
+            int index = Arrays.binarySearch(columns, column, comparator);
+            row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
+        }
 
-		dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
-		dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
+        dataModel.put("className", getClassName());
+        dataModel.put("element", this);
 
-		// filter template
-		List<String> filterTemplates = new ArrayList<String>();
+        dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
+        dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
 
-		Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
-		for(String filterTemplate : dataList.getFilterTemplates()) {
-			if(!pagePattern.matcher(filterTemplate).find()) {
-				filterTemplates.add(filterTemplate);
-			}
-		}
+        // filter template
+        final List<String> filterTemplates = new ArrayList<>();
 
-		dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
-		dataModel.put("showDataListFilter", dataList.getFilters().length > 0 && "true".equals(getPropertyString("showFilter")));
+        final Pattern pagePattern = Pattern.compile("id='d-[0-9]+-p'|id='d-[0-9]+-ps'");
+        for (final String filterTemplate : dataList.getFilterTemplates()) {
+            if (!pagePattern.matcher(filterTemplate).find()) {
+                filterTemplates.add(filterTemplate);
+            }
+        }
 
-		dataModel.put("dataListId", dataList.getId());
+        dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
+        dataModel.put("showDataListFilter", "true".equals(getPropertyString("showFilter")) && dataList.getFilters().length > 0);
 
-		String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), "/templates/DataListChartUserviewMenuAceAdmin.ftl", "/messages/DataListChartUserviewMenu");
-		return htmlContent;
-	}
+        dataModel.put("dataListId", dataList.getId());
 
-	@Override
-	public String getAceDecoratedMenu() {
-		return null;
-	}
+        String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), template, "/messages/DataListChartUserviewMenu");
+        return htmlContent;
+    }
 }
