@@ -1,5 +1,5 @@
-<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/chart.js/dist/Chart.min.js"></script>
-<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/underscore/underscore-min.js"></script>
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/node_modules/chart.js/dist/chart.min.js"></script>
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/node_modules/underscore/underscore-min.js"></script>
 
 <script>
 	$('document').ready(function() {

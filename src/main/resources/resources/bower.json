@@ -1,0 +1,10 @@
+{
+  "name": "kecak-plugins-datalist-chart-menu",
+  "authors": [
+    "aristo.hadisoeganda@kinnarstudio.com"
+  ],
+  "dependencies": {
+    "chart.js": "3.7.1",
+    "underscore": "1.8.3"
+  }
+}

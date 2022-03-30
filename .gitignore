@@ -5,3 +5,6 @@ target/
 .project
 .settings/
 .classpath
+src/main/resources/resources/bower_components
+node_modules/
+package-lock.json

@@ -1,5 +1,5 @@
-<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/chart.js/dist/Chart.bundle.min.js"></script>
-<script type="text/javascript" src="${request.contextPath}/plugin/${className}/bower_components/underscore/underscore-min.js"></script>
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/node_modules/chart.js/dist/chart.min.js"></script>
+<script type="text/javascript" src="${request.contextPath}/plugin/${className}/node_modules/underscore/underscore-min.js"></script>
 
 <script>
 	$('document').ready(function() {
@@ -135,7 +135,7 @@
             <div class="widget-header widget-header-flat">
                 <h4 class="widget-title lighter">
                     <i class="ace-icon fa fa-signal"></i>
-                    Chart
+                    ${element.properties.label!pluginName}
                 </h4>
                 <div class="widget-toolbar">
                     <a href="#" data-action="collapse">

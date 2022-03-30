@@ -3,7 +3,9 @@ package com.kinnara.kecakplugins.datalistchartmenu;
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
+import org.joget.apps.app.model.MobileElement;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.app.service.MobileUtil;
 import org.joget.apps.datalist.model.*;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
@@ -164,11 +166,12 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
         return null;
     }
 
-    protected String getRenderPage(String template, String errorTemplate) {
-        Map<String, Object> dataModel = new HashMap<>();
+    protected String getRenderPage(final String template, final String errorTemplate) {
+        final ApplicationContext appContext = AppUtil.getApplicationContext();
+        final PluginManager pluginManager = (PluginManager) appContext.getBean("pluginManager");
+        final boolean isMobileView = MobileUtil.isMobileView();
 
-        ApplicationContext appContext = AppUtil.getApplicationContext();
-        PluginManager pluginManager = (PluginManager) appContext.getBean("pluginManager");
+        final Map<String, Object> dataModel = new HashMap<>();
 
         final DataList dataList = getDataList(getPropertyString("dataListId"));
         if (dataList == null) {
@@ -177,8 +180,8 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
         }
 
         getCollectFilters(dataList, ((Map<String, Object>) getRequestParameters()));
-        DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
-        JSONArray data = new JSONArray();
+        final DataListCollection<Map<String, String>> collections = dataList.getRows(DataList.MAXIMUM_PAGE_SIZE, 0);
+        final JSONArray data = new JSONArray();
         for (Map<String, String> row : collections) {
             try {
                 JSONObject jsonRow = new JSONObject();
@@ -192,26 +195,26 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
                 data.put(jsonRow);
             } catch (JSONException e) {
                 data.put(new JSONObject(row));
-                LogUtil.error(getClassName(), e, "");
+                LogUtil.error(getClassName(), e, e.getMessage());
             }
         }
 
-
         // use datalist's primary key if label field not specified
-        if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty())
+        if (getPropertyString("labelField") == null || getPropertyString("labelField").isEmpty()) {
             setProperty("labelField", dataList.getBinder().getPrimaryKeyColumnName());
+        }
 
         dataModel.put("data", data);
 
         try {
-            JSONArray customColors = new JSONArray(getProperty("customColors"));
+            final JSONArray customColors = new JSONArray(getProperty("customColors"));
             dataModel.put("customColors", customColors);
         } catch (JSONException e) {
-            LogUtil.error(getClassName(), e, "");
+            LogUtil.error(getClassName(), e, e.getMessage());
         }
 
-        DataListColumn[] columns = dataList.getColumns();
-        Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
+        final DataListColumn[] columns = dataList.getColumns();
+        final Comparator<DataListColumn> comparator = Comparator.comparing(DataListColumn::getName);
 
         Arrays.sort(columns, comparator);
 
@@ -235,6 +238,7 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
 
         dataModel.put("className", getClassName());
         dataModel.put("element", this);
+        dataModel.put("pluginName", getName());
 
         dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
         dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
@@ -250,11 +254,11 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
         }
 
         dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
-        dataModel.put("showDataListFilter", "true".equals(getPropertyString("showFilter")) && dataList.getFilters().length > 0);
+        dataModel.put("showDataListFilter", "true".equals(getPropertyString("showFilter")) && !isMobileView && dataList.getFilters().length > 0);
 
         dataModel.put("dataListId", dataList.getId());
 
-        String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), template, "/messages/DataListChartUserviewMenu");
+        final String htmlContent = pluginManager.getPluginFreeMarkerTemplate(dataModel, getClassName(), template, "/messages/DataListChartUserviewMenu");
         return htmlContent;
     }
 }
