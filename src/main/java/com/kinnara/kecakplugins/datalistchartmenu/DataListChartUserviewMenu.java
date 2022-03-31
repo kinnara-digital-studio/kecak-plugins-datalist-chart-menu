@@ -10,6 +10,7 @@ import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
+import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +18,7 @@ import org.kecak.apps.userview.model.AceUserviewMenu;
 import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -166,6 +168,7 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
     }
 
     protected String getRenderPage(final String template, final String errorTemplate) {
+        final HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
         final ApplicationContext appContext = AppUtil.getApplicationContext();
         final PluginManager pluginManager = (PluginManager) appContext.getBean("pluginManager");
         final boolean isMobileView = MobileUtil.isMobileView();
@@ -239,6 +242,9 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
         dataModel.put("element", this);
         dataModel.put("pluginName", getName());
 
+        final boolean isEmbedded = (boolean) request.getAttribute("embed");
+        dataModel.put("isEmbedded", isEmbedded);
+
         dataModel.put("customHeader", AppUtil.processHashVariable(getPropertyString("customHeader"), null, null, null));
         dataModel.put("customFooter", AppUtil.processHashVariable(getPropertyString("customFooter"), null, null, null));
 
@@ -253,7 +259,7 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
         }
 
         dataModel.put("filterTemplates", filterTemplates.toArray(new String[0]));
-        dataModel.put("showDataListFilter", "true".equals(getPropertyString("showFilter")) && !isMobileView && dataList.getFilters().length > 0);
+        dataModel.put("showDataListFilter", !isEmbedded && "true".equals(getPropertyString("showFilter")) && !isMobileView && dataList.getFilters().length > 0);
 
         dataModel.put("dataListId", dataList.getId());
 
