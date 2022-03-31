@@ -134,17 +134,19 @@
 <div class="col-xs-12">
     <div class="row">
         <div class="widget-box transparent">
-            <div class="widget-header widget-header-flat">
-                <h4 class="widget-title lighter">
-                    <i class="ace-icon fa fa-signal"></i>
-                    ${element.properties.label!pluginName}
-                </h4>
-                <div class="widget-toolbar">
-                    <a href="#" data-action="collapse">
-                        <i class="ace-icon fa fa-chevron-up"></i>
-                    </a>
+            <#if isEmbedded == false >
+                <div class="widget-header widget-header-flat">
+                    <h4 class="widget-title lighter">
+                        <i class="ace-icon fa fa-signal"></i>
+                        ${element.properties.label!pluginName}
+                    </h4>
+                    <div class="widget-toolbar">
+                        <a href="#" data-action="collapse">
+                            <i class="ace-icon fa fa-chevron-up"></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
+            </#if>
             <div class="widget-body">
                 <div class="widget-main padding-4">
                     <canvas id="dashboard-menu" height="${element.properties.height!'25%'}" width="${element.properties.width!'25%'}"></canvas>
