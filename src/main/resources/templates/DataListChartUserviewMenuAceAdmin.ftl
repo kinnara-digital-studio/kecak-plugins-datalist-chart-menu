@@ -77,6 +77,7 @@
 				},
 				options: {
 				    responsive: true,
+				    maintainAspectRatio: false,
 					<#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line'>
 	        			scales: {
 	        				yAxes: [{

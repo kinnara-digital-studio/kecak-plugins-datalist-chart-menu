@@ -3,8 +3,8 @@
   "version": "1.2.0",
   "author": "kinnara.com",
   "license": "ISC",
-  "dependencies" : {
-    "chart.js" : "3.7.1",
-    "underscore" : "1.13.2"
+  "dependencies": {
+    "chart.js": "3.7.1",
+    "underscore": "1.13.2"
   }
 }
