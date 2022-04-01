@@ -148,8 +148,8 @@
                 </div>
             </#if>
             <div class="widget-body">
-                <div class="widget-main padding-4">
-                    <canvas id="dashboard-menu" height="${element.properties.height!'25%'}" width="${element.properties.width!'25%'}"></canvas>
+                <div class="widget-main padding-4" style="max-height:${element.properties.height!};">
+                    <canvas id="dashboard-menu"></canvas>
                 </div>
             </div>
         </div>
