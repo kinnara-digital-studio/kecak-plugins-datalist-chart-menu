@@ -38,7 +38,7 @@
 		}
 
 		var arrData = ${data};
-		var canvas 	= document.getElementById("dashboard-menu");
+		var canvas 	= document.getElementById("canvas-${element.properties.id!}");
 		var context = canvas.getContext("2d");
 		var chart 	= new Chart(context,
 			{
@@ -125,6 +125,6 @@
 	    </div>
 	</form>
 </#if>
-<canvas id="dashboard-menu" height="${element.properties.height}" width="${element.properties.width}"></canvas>
+<canvas id="canvas-${element.properties.id!}" height="${element.properties.height}" width="${element.properties.width}"></canvas>
 <div>${customFooter}</div>
 

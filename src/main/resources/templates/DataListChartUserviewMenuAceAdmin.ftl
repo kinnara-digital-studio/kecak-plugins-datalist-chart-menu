@@ -38,8 +38,7 @@
 		}
 
 		var arrData = ${data};
-		console.log(arrData);
-		var canvas 	= document.getElementById("dashboard-menu");
+		var canvas 	= document.getElementById("canvas-${element.properties.id!}");
 		var context = canvas.getContext("2d");
 		var chart 	= new Chart(context,
 			{
@@ -133,7 +132,7 @@
 </#if>
 <div class="col-xs-12">
     <div class="row">
-        <div class="widget-box transparent">
+        <div class="widget-box">
             <#if isEmbedded == false >
                 <div class="widget-header widget-header-flat">
                     <h4 class="widget-title lighter">
@@ -149,7 +148,7 @@
             </#if>
             <div class="widget-body">
                 <div class="widget-main padding-4" style="max-height:${element.properties.height!};">
-                    <canvas id="dashboard-menu"></canvas>
+                    <canvas id="canvas-${element.properties.id!}"></canvas>
                 </div>
             </div>
         </div>
