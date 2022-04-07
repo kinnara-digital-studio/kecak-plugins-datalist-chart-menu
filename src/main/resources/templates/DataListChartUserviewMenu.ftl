@@ -37,9 +37,9 @@
 			return parseInt(min + percentage * (max - min));
 		}
 
-		var arrData = ${data};
-		var canvas 	= document.getElementById("canvas-${element.properties.id!}");
-		var context = canvas.getContext("2d");
+		let arrData = ${data};
+		let canvas 	= document.getElementById("canvas-${element.properties.id!}");
+		let context = canvas.getContext("2d");
 		var chart 	= new Chart(context,
 			{
 				type : '${element.properties.chartType}',
@@ -58,7 +58,19 @@
 										borderColor	: hexToRGB('${row.maxColor!}'),
 										backgroundColor : hexToRGB('${row.maxColor!}', 0.1)
 									<#else>
-										<#-- backgroundColor : _.map(data, item => hexToRGB('${row.maxColor!}')) -->
+									    backgroundColor : _.map(arrData, function(item) {
+									                      let sortedDataValues = _.sortBy(arrData, e => -parseFloat(e.${row.field}));
+                                                          let index = _.findIndex(sortedDataValues, item, '${element.properties.labelField}');
+
+                                                          return calculateColor(
+                                                              arrData.length ? arrData.length - 1 : 0,
+                                                              0,
+                                                              '${row.maxColor!}',
+                                                              '${row.minColor!}',
+                                                              index,
+                                                              item.${element.properties.labelField});
+                                                      })
+									<#--
 										backgroundColor : _.map(arrData, item => calculateColor(
 																Math.max(..._.map(arrData, item => item.${row.field})),
 																Math.min(..._.map(arrData, item => item.${row.field})),
@@ -66,6 +78,7 @@
 																'${row.minColor!}',
 																parseFloat(item.${row.field!}),
 																item.${element.properties.labelField}))
+									-->
 									</#if>
 								</#if>
 							}
