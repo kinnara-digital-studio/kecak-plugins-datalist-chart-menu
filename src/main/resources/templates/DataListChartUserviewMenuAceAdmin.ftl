@@ -127,22 +127,22 @@
         .filters { text-align:right; font-size:smaller }
         .filter-cell{display:inline-block;padding-left:5px;}
     </style>
-<div class="col-xs-12">
-    <div class="row">
-        <form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
-            <div class="filters">
-                <#list filterTemplates! as template>
-                    <span class="filter-cell">
-                        ${template}
-                    </span>
-                </#list>
-                 <span class="filter-cell">
-                     <input type="submit" value="Show"/>
-                 </span>
-            </div>
-        </form>
-	</div>
-</div>
+    <div class="col-xs-12">
+        <div class="row">
+            <form name="filters_${dataListId}" id="filters_${dataListId}" action="?" method="POST">
+                <div class="filters">
+                    <#list filterTemplates! as template>
+                        <span class="filter-cell">
+                            ${template}
+                        </span>
+                    </#list>
+                     <span class="filter-cell">
+                         <input type="submit" value="Show"/>
+                     </span>
+                </div>
+            </form>
+        </div>
+    </div>
 </#if>
 <div class="col-xs-12">
     <div class="row">

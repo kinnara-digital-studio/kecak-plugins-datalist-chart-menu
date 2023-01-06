@@ -1,12 +1,6 @@
 package com.kinnara.kecakplugins.datalistchartmenu;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.joget.apps.app.dao.DatalistDefinitionDao;
@@ -227,7 +221,10 @@ public class EnhDatalistChartUserviewMenu extends UserviewMenu{
 
 	@Override
 	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
+		PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+		ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+		String buildNumber = resourceBundle.getString("buildNumber");
+		return buildNumber;
 	}
 
 	@Override
