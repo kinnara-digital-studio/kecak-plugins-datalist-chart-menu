@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.datalistchartmenu;
+package com.kinnarastudio.kecakplugins.datalistchartmenu.userview.menu;
 
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
@@ -14,8 +14,6 @@ import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.kecak.apps.userview.model.AceUserviewMenu;
-import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * @author aristo
  */
-public class DataListChartUserviewMenu extends UserviewMenu implements AceUserviewMenu {
+public class DataListChartUserviewMenu extends UserviewMenu {
 
     private WeakHashMap<String, DataList> datalistCache = new WeakHashMap<>();
 
@@ -152,21 +150,6 @@ public class DataListChartUserviewMenu extends UserviewMenu implements AceUservi
                 }
             }
         }
-        return null;
-    }
-
-    @Override
-    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
-        return null;
-    }
-
-    @Override
-    public String getAceRenderPage() {
-        return getRenderPage("/templates/DataListChartUserviewMenuAceAdmin.ftl", "/templates/Error.ftl");
-    }
-
-    @Override
-    public String getAceDecoratedMenu() {
         return null;
     }
 

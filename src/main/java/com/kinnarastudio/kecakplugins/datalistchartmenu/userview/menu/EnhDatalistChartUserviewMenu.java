@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.datalistchartmenu;
+package com.kinnarastudio.kecakplugins.datalistchartmenu.userview.menu;
 
 import java.util.*;
 import java.util.regex.Pattern;
