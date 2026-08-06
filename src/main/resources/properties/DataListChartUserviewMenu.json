@@ -56,8 +56,61 @@
           {
             "value": "doughnut",
             "label": "@@dashboardMenu.chartType.doughnut@@"
+          },
+          {
+            "value": "bullet",
+            "label": "Bullet"
           }
         ]
+      },
+      {
+        "label": "Bullet Chart Configuration",
+        "type": "header",
+        "control_field": "chartType",
+        "control_value": "bullet"
+      },
+      {
+        "name": "target",
+        "label": "Target",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "bullet"
+      },
+      {
+        "name": "bulletRangeColor",
+        "label": "Bullet Chart Range Value Color",
+        "description": "Separate the range color",
+        "type": "grid",
+        "required": "true",
+        "columns": [
+          {
+            "key": "xRange",
+            "label": "X Axis Range",
+            "required": "true"
+          },
+          {
+            "key": "bulletHexColor",
+            "label": "HEX Color"
+          }
+        ],
+        "control_field": "chartType",
+        "control_value": "bullet"
+      },
+      {
+        "name": "bulletValueField",
+        "label": "Value Field",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "bullet",
+        "required": "true"
+      },
+      {
+        "name": "bulletTotalValueField",
+        "label": "Total Value Field",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "bullet",
+        "required": "true"
       }
     ]
   },
@@ -112,14 +165,17 @@
         "required": "true"
       },
       {
-      	"name" : "showFilter",
-      	"label" : "@@dashboardMenu.showFilter@@",
-      	"description" : "@@dashboardMenu.showFilter.description@@",
-      	"value" : "true",
-      	"type" : "checkbox",
-      	"options" : [
-      		{"value" : "true", "label" : ""}
-      	]
+        "name": "showFilter",
+        "label": "@@dashboardMenu.showFilter@@",
+        "description": "@@dashboardMenu.showFilter.description@@",
+        "value": "true",
+        "type": "checkbox",
+        "options": [
+          {
+            "value": "true",
+            "label": ""
+          }
+        ]
       },
       {
         "name": "customColors",
@@ -181,4 +237,3 @@
     ]
   }
 ]
-
