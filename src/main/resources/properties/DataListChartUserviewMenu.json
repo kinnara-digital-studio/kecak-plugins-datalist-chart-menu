@@ -60,6 +60,10 @@
           {
             "value": "bullet",
             "label": "Bullet"
+          },
+          {
+            "value": "barline",
+            "label": "Bar Line"
           }
         ]
       },

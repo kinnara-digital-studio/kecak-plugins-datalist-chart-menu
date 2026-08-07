@@ -57,18 +57,22 @@
                 bulletDataRows.push(rowObj);
             });
 
-            if (bulletDataRows.length === 0 || !bulletDataRows[0].hasOwnProperty('actual')) {
-                bulletDataRows = [
-                    { label: "Dummy Data Central", actual: 82000, target: 90000, poor: 50000, sat: 75000, good: 120000 }
-                ];
-            }
-
             canvas.style.display = 'none';
             let container = document.createElement('div');
             container.id = 'bullet-container-${element.properties.id!}';
             container.style.width = '${element.properties.width}';
             container.style.marginTop = '20px';
             canvas.parentNode.insertBefore(container, canvas.nextSibling);
+
+            if (bulletDataRows.length === 0 || !bulletDataRows[0].hasOwnProperty('actual')) {
+                container.style.textAlign = 'center';
+                container.style.padding = '30px';
+                container.style.color = '#888';
+                container.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                container.style.fontStyle = 'italic';
+                container.innerHTML = 'Nothing found to display';
+                return;
+            }
 
             let bulletRanges = [];
             <#if element.properties.bulletRangeColor??>
@@ -106,21 +110,37 @@
             });
             if (maxVal === 0) maxVal = 1;
 
+            let hasPctRanges = bulletRanges.length > 0 && bulletRanges.some(r => r.range.indexOf('%') !== -1);
+
             bulletDataRows.forEach(row => {
-                let pActual = ((row.actual || 0) / maxVal) * 100;
+                let rowMax = maxVal;
+                if (hasPctRanges) {
+                    if (row.total !== undefined && row.total > 0) {
+                        rowMax = row.total;
+                    } else if (globalTargetNum > 0 && !isGlobalTargetPct) {
+                        rowMax = globalTargetNum;
+                    }
+                }
+
+                let pActual = ((row.actual || 0) / rowMax) * 100;
                 let cActual = row.actualColor ? hexToRGB(row.actualColor) : '#666666';
 
                 let pTarget = 0;
-                if (row.target !== undefined && row.target > 0) {
-                     pTarget = (row.target / maxVal) * 100;
-                } else if (globalTargetNum > 0) {
+                if (globalTargetNum > 0) {
                      if (isGlobalTargetPct) {
                          pTarget = globalTargetNum;
                      } else {
-                         pTarget = (globalTargetNum / maxVal) * 100;
+                         pTarget = (globalTargetNum / rowMax) * 100;
                      }
+                } else if (row.total !== undefined && row.total > 0) {
+                     pTarget = (row.total / rowMax) * 100;
                 }
                 let cTarget = row.targetColor ? hexToRGB(row.targetColor) : '#333333';
+
+                let displayPct = pActual;
+                if (!hasPctRanges && row.total !== undefined && row.total > 0) {
+                    displayPct = ((row.actual || 0) / row.total) * 100;
+                }
                 
                 let rangesHtml = '';
                 if (bulletRanges.length > 0) {
@@ -163,7 +183,7 @@
                             <div style="position: absolute; left: ${pTarget}%; top: 15%; height: 70%; width: 4px; background-color: ${cTarget}; margin-left: -2px; z-index: 2;"></div>
                         </div>
                         <div style="width: 80px; padding-left: 15px; font-weight: bold; color: #333; font-size: 14px;">
-                            ${pActual.toLocaleString(undefined, {maximumFractionDigits: 1})}%
+                            ${displayPct.toLocaleString(undefined, {maximumFractionDigits: 1})}%
                         </div>
                     </div>
                 `</#noparse>;
