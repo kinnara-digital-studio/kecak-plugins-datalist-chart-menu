@@ -243,20 +243,31 @@
 
         } else {
             // ORIGINAL CHART JS INITIALIZATION
+            var chartType = '${element.properties.chartType!}';
+            var mainType = chartType === 'barline' ? 'bar' : chartType;
+            
             var chart = new Chart(context, {
-                type : '${element.properties.chartType}',
+                type : mainType,
                 data : {
                     labels : _.map(arrData, item => item.${element.properties.labelField}),
                     datasets : [
                         <#assign first = true>
                         <#list element.properties.valueFields! as row>
                             <#if !first>,</#if>
+                            <#assign lineFieldsClean = "," + (element.properties.barlineLineFields!"")?replace(" ", "") + ",">
+                            <#assign isLineDataset = (element.properties.chartType! == 'barline' && lineFieldsClean?contains("," + row.field + ","))>
                             {
                                 label : '${row.label}',
+                                <#if isLineDataset>
+                                type : 'line',
+                                order : 0,
+                                <#elseif element.properties.chartType! == 'barline'>
+                                order : 1,
+                                </#if>
                                 data : _.map(arrData, item => item.${row.field})
                                 <#if row.maxColor?? && row.maxColor != ''>
                                     ,
-                                    <#if element.properties.chartType! == 'line' || element.properties.chartType! == 'radar'>
+                                    <#if element.properties.chartType! == 'line' || element.properties.chartType! == 'radar' || isLineDataset>
                                         borderColor	: hexToRGB('${row.maxColor!}'),
                                         backgroundColor : hexToRGB('${row.maxColor!}', 0.1)
                                     <#else>
@@ -280,7 +291,7 @@
                     ]
                 },
                 options: {
-                    <#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line'>
+                    <#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line' || element.properties.chartType! == 'barline'>
                         scales: {
                             yAxes: [{
                                 ticks: {

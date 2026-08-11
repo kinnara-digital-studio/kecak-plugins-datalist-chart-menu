@@ -115,6 +115,20 @@
         "control_field": "chartType",
         "control_value": "bullet",
         "required": "true"
+      },
+      {
+        "label": "Bar Line Chart Configuration",
+        "type": "header",
+        "control_field": "chartType",
+        "control_value": "barline"
+      },
+      {
+        "name": "barlineLineFields",
+        "label": "Line Dataset Field(s)",
+        "description": "Enter the field name to render as Line (e.g. completed_process). Separate by comma if multiple. Other fields in Data tab will be Bar.",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "barline"
       }
     ]
   },
