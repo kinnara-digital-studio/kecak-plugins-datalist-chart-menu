@@ -28,6 +28,23 @@
         "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options"
       },
       {
+        "name": "chartLibrary",
+        "label": "JS Chart Library",
+        "type": "radio",
+        "required": "true",
+        "value": "chartJs",
+        "options": [
+          {
+            "value": "chartJs",
+            "label": "Chart JS"
+          },
+          {
+            "value": "d3ChartJs",
+            "label": "D3 Chart JS"
+          }
+        ]
+      },
+      {
         "name": "chartType",
         "label": "@@dashboardMenu.chartType@@",
         "type": "selectbox",

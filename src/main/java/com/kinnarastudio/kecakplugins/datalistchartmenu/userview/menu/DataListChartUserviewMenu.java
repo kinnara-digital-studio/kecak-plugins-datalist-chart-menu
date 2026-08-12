@@ -1,11 +1,27 @@
 package com.kinnarastudio.kecakplugins.datalistchartmenu.userview.menu;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.WeakHashMap;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DatalistDefinition;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.MobileUtil;
-import org.joget.apps.datalist.model.*;
+import org.joget.apps.datalist.model.DataList;
+import org.joget.apps.datalist.model.DataListCollection;
+import org.joget.apps.datalist.model.DataListColumn;
+import org.joget.apps.datalist.model.DataListColumnFormat;
+import org.joget.apps.datalist.model.DataListFilterQueryObject;
 import org.joget.apps.datalist.service.DataListService;
 import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.LogUtil;
@@ -15,10 +31,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author aristo
@@ -39,7 +51,18 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 
     @Override
     public String getRenderPage() {
-        return getRenderPage("/templates/DataListChartUserviewMenu.ftl", "/templates/Error.ftl");
+        final String template;
+        final String chartLib = getPropertyString("chartLibrary");
+
+        LogUtil.info(getClassName(), "Chart Lib: " + chartLib);
+
+        if (chartLib.equals("d3ChartJs")) {
+            template = "/templates/DataListD3ChartUserviewMenu.ftl";
+        } else {
+            template = "/templates/DataListChartUserviewMenu.ftl";
+        }
+
+        return getRenderPage(template, "/templates/Error.ftl");
     }
 
     @Override

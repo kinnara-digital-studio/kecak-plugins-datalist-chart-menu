@@ -246,6 +246,58 @@
             var chartType = '${element.properties.chartType!}';
             var mainType = chartType === 'barline' ? 'bar' : chartType;
             
+            var customDoughnutLabelPlugin = {
+                id: 'customDoughnutLabelPlugin',
+                afterDraw: function(chart, args, options) {
+                    if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') {
+                        return;
+                    }
+                    var ctx = chart.ctx;
+                    var total = 0;
+                    
+                    chart.data.datasets.forEach(function(dataset, datasetIndex) {
+                        var meta = chart.getDatasetMeta(datasetIndex);
+                        if (meta.hidden) return;
+                        
+                        meta.data.forEach(function(element, index) {
+                            var value = dataset.data[index];
+                            if (datasetIndex === 0 && !isNaN(value)) {
+                                total += Number(value);
+                            }
+                            if (value > 0) {
+                                var position = element.tooltipPosition();
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = "bold 14px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.shadowColor = 'rgba(0,0,0,0.6)';
+                                ctx.shadowBlur = 4;
+                                ctx.fillText(value, position.x, position.y);
+                                ctx.shadowBlur = 0;
+                            }
+                        });
+                    });
+
+                    if (chart.config.type === 'doughnut') {
+                        ctx.restore();
+                        var height = chart.chartArea.bottom - chart.chartArea.top;
+                        var fontSize = (height / 100).toFixed(2);
+                        if (fontSize < 1) fontSize = 1;
+                        if (fontSize > 5) fontSize = 5;
+                        ctx.font = "bold " + fontSize + "em 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#333";
+                        ctx.textAlign = 'center';
+                        
+                        var centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                        var centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                        
+                        ctx.fillText(total.toString(), centerX, centerY);
+                        ctx.save();
+                    }
+                }
+            };
+            
             var chart = new Chart(context, {
                 type : mainType,
                 data : {
@@ -300,7 +352,8 @@
                             }]
                         }
                     </#if>
-                }
+                },
+                plugins: [customDoughnutLabelPlugin]
             });
 
             <#if element.properties.chartURL! != ''>
