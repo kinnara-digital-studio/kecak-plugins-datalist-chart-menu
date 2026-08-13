@@ -64,23 +64,76 @@
         let labelField = '${element.properties.labelField}';
         
         let datasets = [];
-        <#assign lineFieldsClean = "," + (element.properties.barlineLineFields!"")?replace(" ", "") + ",">
         <#list element.properties.valueFields! as row>
-            <#assign isLineDataset = (element.properties.chartType! == 'barline' && lineFieldsClean?contains("," + row.field + ","))>
+            <#assign isLineDataset = false>
+            <#assign isBarDataset = false>
+            <#assign customHexColor = "">
+            
+            <#if element.properties.chartType! == 'barline'>
+                <#if element.properties.barlineLineFields?? && element.properties.barlineLineFields?is_sequence>
+                    <#list element.properties.barlineLineFields as blf>
+                        <#if blf.field == row.field>
+                            <#if blf.barlineType! == 'line'>
+                                <#assign isLineDataset = true>
+                            <#elseif blf.barlineType! == 'bar'>
+                                <#assign isBarDataset = true>
+                            </#if>
+                            <#if blf.hexColor?? && blf.hexColor != ''>
+                                <#assign customHexColor = blf.hexColor>
+                            </#if>
+                        </#if>
+                    </#list>
+                </#if>
+            </#if>
+            
+            <#assign useColor = row.maxColor!"">
+            <#if customHexColor != "">
+                <#assign useColor = customHexColor>
+            </#if>
+            
             datasets.push({
                 field: '${row.field}',
                 label: '${row.label}',
-                color: '${row.maxColor!}',
+                color: '${useColor}',
                 type: <#if isLineDataset>'line'<#else>'bar'</#if>
             });
         </#list>
         
         let yMax = 0;
-        datasets.forEach(ds => {
-            let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
-            if (maxInDs > yMax) yMax = maxInDs;
-        });
-        if (yMax === 0) yMax = 10;
+        let yMin = 0;
+        let isStacked = '${element.properties.multiBarPosition!}' === 'stack' && (chartType === 'bar' || chartType === 'barline');
+        
+        if (isStacked) {
+            let barDatasetsLocal = datasets.filter(ds => ds.type === 'bar');
+            arrData.forEach(d => {
+                let pos = 0;
+                let neg = 0;
+                barDatasetsLocal.forEach(ds => {
+                    let v = Number(d[ds.field]) || 0;
+                    if (v >= 0) pos += v;
+                    else neg += v;
+                });
+                if (pos > yMax) yMax = pos;
+                if (neg < yMin) yMin = neg;
+                
+                d._posSum = 0;
+                d._negSum = 0;
+            });
+            datasets.filter(ds => ds.type === 'line').forEach(ds => {
+                let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
+                let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                if (maxInDs > yMax) yMax = maxInDs;
+                if (minInDs < yMin) yMin = minInDs;
+            });
+        } else {
+            datasets.forEach(ds => {
+                let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
+                let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                if (maxInDs > yMax) yMax = maxInDs;
+                if (minInDs < yMin) yMin = minInDs;
+            });
+        }
+        if (yMax === 0 && yMin === 0) yMax = 10;
         
         let colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -108,7 +161,7 @@
                 
             let y = d3.scaleLinear()
                 .range([innerHeight, 0])
-                .domain([0, yMax]);
+                .domain([yMin, yMax]).nice();
 
             let g = svg.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -123,6 +176,16 @@
             g.append("g")
                 .call(d3.axisLeft(y));
 
+            if (yMin < 0) {
+                g.append("line")
+                    .attr("x1", 0)
+                    .attr("x2", innerWidth)
+                    .attr("y1", y(0))
+                    .attr("y2", y(0))
+                    .attr("stroke", "#000")
+                    .attr("stroke-width", 1);
+            }
+
             // Draw bars
             if (barDatasets.length > 0) {
                 let slice = g.selectAll(".slice")
@@ -134,10 +197,35 @@
                 barDatasets.forEach((ds, i) => {
                     slice.append("rect")
                         .attr("class", "bar d3-element")
-                        .attr("x", x1(ds.field))
-                        .attr("y", d => y(Number(d[ds.field])))
-                        .attr("width", x1.bandwidth())
-                        .attr("height", d => innerHeight - y(Number(d[ds.field])))
+                        .attr("x", isStacked ? 0 : x1(ds.field))
+                        .attr("y", d => {
+                            let val = Number(d[ds.field]);
+                            if (isStacked) {
+                                if (val >= 0) {
+                                    d._posSum += val;
+                                    return y(d._posSum);
+                                } else {
+                                    let prev = d._negSum;
+                                    d._negSum += val;
+                                    return y(prev);
+                                }
+                            } else {
+                                return val >= 0 ? y(val) : y(0);
+                            }
+                        })
+                        .attr("width", isStacked ? x0.bandwidth() : x1.bandwidth())
+                        .attr("height", d => {
+                            let val = Number(d[ds.field]);
+                            if (isStacked) {
+                                if (val >= 0) {
+                                    return Math.abs(y(d._posSum - val) - y(d._posSum));
+                                } else {
+                                    return Math.abs(y(d._negSum) - y(d._negSum - val));
+                                }
+                            } else {
+                                return Math.abs(y(val) - y(0));
+                            }
+                        })
                         .attr("fill", ds.color ? ds.color : colorScale(i))
                         .on("mouseover", function(event, d) {
                             tooltip.transition().duration(200).style("opacity", .9);
@@ -248,7 +336,7 @@
                  
              let y = d3.scaleLinear()
                  .range([innerHeight, 0])
-                 .domain([0, yMax]);
+                 .domain([yMin, yMax]).nice();
 
              let g = svg.append("g")
                  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -262,6 +350,16 @@
 
              g.append("g")
                  .call(d3.axisLeft(y));
+
+             if (yMin < 0) {
+                 g.append("line")
+                     .attr("x1", 0)
+                     .attr("x2", innerWidth)
+                     .attr("y1", y(0))
+                     .attr("y2", y(0))
+                     .attr("stroke", "#000")
+                     .attr("stroke-width", 1);
+             }
 
              datasets.forEach((ds, i) => {
                  let line = d3.line()
@@ -295,6 +393,217 @@
                          d3.select(this).attr("r", 5);
                      });
              });
+        } else if (chartType === 'bullet') {
+            svg.remove();
+
+            function hexToRGB(hex, alpha) {
+                if (!hex) return '';
+                hex = hex.replace(/^#/, '');
+                if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+                var r = parseInt(hex.slice(0, 2), 16) || 0,
+                    g = parseInt(hex.slice(2, 4), 16) || 0,
+                    b = parseInt(hex.slice(4, 6), 16) || 0;
+                if (alpha) {
+                    return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+                } else {
+                    return "rgb(" + r + ", " + g + ", " + b + ")";
+                }
+            }
+
+            let bulletDataRows = [];
+            arrData.forEach(item => {
+                let rowObj = { label: item['${element.properties.labelField}'] || 'Unknown' };
+                
+                <#if element.properties.bulletValueField?? && element.properties.bulletValueField != "">
+                    rowObj.actual = parseFloat(item['${element.properties.bulletValueField!}']) || 0;
+                </#if>
+                
+                <#if element.properties.bulletTotalValueField?? && element.properties.bulletTotalValueField != "">
+                    rowObj.total = parseFloat(item['${element.properties.bulletTotalValueField!}']) || 0;
+                </#if>
+                
+                bulletDataRows.push(rowObj);
+            });
+
+            let domContainer = document.querySelector(containerId);
+            domContainer.style.width = '${element.properties.width}';
+            domContainer.style.marginTop = '20px';
+
+            if (bulletDataRows.length === 0 || !bulletDataRows[0].hasOwnProperty('actual')) {
+                domContainer.style.textAlign = 'center';
+                domContainer.style.padding = '30px';
+                domContainer.style.color = '#888';
+                domContainer.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                domContainer.style.fontStyle = 'italic';
+                domContainer.innerHTML = 'Nothing found to display';
+            } else {
+                let bulletRanges = [];
+                <#if element.properties.bulletRangeColor??>
+                    <#list element.properties.bulletRangeColor as r>
+                        bulletRanges.push({
+                            range: '${r.xRange!}',
+                            color: '${r.bulletHexColor!}'
+                        });
+                    </#list>
+                </#if>
+                
+                bulletRanges.sort((a, b) => {
+                    let aVal = parseFloat(a.range) || 0;
+                    let bVal = parseFloat(b.range) || 0;
+                    return bVal - aVal;
+                });
+                
+                let globalTargetProp = '${element.properties.target!}';
+                let globalTargetNum = parseFloat(globalTargetProp) || 0;
+                let isGlobalTargetPct = globalTargetProp.indexOf('%') !== -1;
+
+                let maxVal = 0;
+                bulletDataRows.forEach(row => {
+                    if (row.actual > maxVal) maxVal = row.actual;
+                    if (row.total !== undefined && row.total > maxVal) maxVal = row.total;
+                });
+                if (!isGlobalTargetPct && globalTargetNum > maxVal) {
+                    maxVal = globalTargetNum;
+                }
+                bulletRanges.forEach(r => {
+                    if (r.range.indexOf('%') === -1) {
+                        let rVal = parseFloat(r.range) || 0;
+                        if (rVal > maxVal) maxVal = rVal;
+                    }
+                });
+                if (maxVal === 0) maxVal = 1;
+
+                let hasPctRanges = bulletRanges.length > 0 && bulletRanges.some(r => r.range.indexOf('%') !== -1);
+
+                bulletDataRows.forEach(row => {
+                    let rowMax = maxVal;
+                    if (hasPctRanges) {
+                        if (row.total !== undefined && row.total > 0) {
+                            rowMax = row.total;
+                        } else if (globalTargetNum > 0 && !isGlobalTargetPct) {
+                            rowMax = globalTargetNum;
+                        }
+                    }
+
+                    let pActual = ((row.actual || 0) / rowMax) * 100;
+                    let cActual = row.actualColor ? hexToRGB(row.actualColor) : '#666666';
+
+                    let pTarget = 0;
+                    if (globalTargetNum > 0) {
+                         if (isGlobalTargetPct) {
+                             pTarget = globalTargetNum;
+                         } else {
+                             pTarget = (globalTargetNum / rowMax) * 100;
+                         }
+                    } else if (row.total !== undefined && row.total > 0) {
+                         pTarget = (row.total / rowMax) * 100;
+                    }
+                    let cTarget = row.targetColor ? hexToRGB(row.targetColor) : '#333333';
+
+                    let displayPct = pActual;
+                    if (!hasPctRanges && row.total !== undefined && row.total > 0) {
+                        displayPct = ((row.actual || 0) / row.total) * 100;
+                    }
+                    
+                    let rangesHtml = '';
+                    if (bulletRanges.length > 0) {
+                        bulletRanges.forEach(r => {
+                            let rWidth = 0;
+                            if (r.range.indexOf('%') !== -1) {
+                                rWidth = parseFloat(r.range) || 0;
+                            } else {
+                                rWidth = ((parseFloat(r.range) || 0) / maxVal) * 100;
+                            }
+                            let rColor = r.color ? (hexToRGB(r.color, 1) || r.color) : '#eee';
+                            rangesHtml += '<div style="position: absolute; left: 0; top: 0; height: 100%; width: ' + rWidth + '%; background-color: ' + rColor + ';"></div>';
+                        });
+                    } else {
+                        let pGood = ((row.good || 0) / maxVal) * 100;
+                        let pSat = ((row.sat || 0) / maxVal) * 100;
+                        let pPoor = ((row.poor || 0) / maxVal) * 100;
+                        let cGood = row.goodColor ? hexToRGB(row.goodColor, 0.4) : 'rgba(204, 255, 204, 0.7)';
+                        let cSat = row.satColor ? hexToRGB(row.satColor, 0.4) : 'rgba(255, 255, 204, 0.7)';
+                        let cPoor = row.poorColor ? hexToRGB(row.poorColor, 0.4) : 'rgba(255, 204, 204, 0.7)';
+                        rangesHtml = '<div style="position: absolute; left: 0; top: 0; height: 100%; width: ' + pGood + '%; background-color: ' + cGood + ';"></div>' +
+                                     '<div style="position: absolute; left: 0; top: 0; height: 100%; width: ' + pSat + '%; background-color: ' + cSat + ';"></div>' +
+                                     '<div style="position: absolute; left: 0; top: 0; height: 100%; width: ' + pPoor + '%; background-color: ' + cPoor + ';"></div>';
+                    }
+
+                    let rowHtml = <#noparse>`
+                        <div style="display: flex; align-items: center; margin-bottom: 25px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                            <div style="width: 30%; max-width: 200px; text-align: right; padding-right: 15px;">
+                                <div style="font-size: 15px; font-weight: 600; color: #444;">${row.label}</div>
+                                <div style="font-size: 11px; color: #888;">Actual vs Target</div>
+                            </div>
+                            <div style="flex-grow: 1; position: relative; height: 35px; background: #f5f5f5;">
+                                <!-- Ranges -->
+                                ${rangesHtml}
+                                
+                                <!-- Actual -->
+                                <div style="position: absolute; left: 0; top: 30%; height: 40%; width: ${pActual}%; background-color: ${cActual}; z-index: 1;"></div>
+                                
+                                <!-- Target -->
+                                <div style="position: absolute; left: ${pTarget}%; top: 15%; height: 70%; width: 4px; background-color: ${cTarget}; margin-left: -2px; z-index: 2;"></div>
+                            </div>
+                            <div style="width: 80px; padding-left: 15px; font-weight: bold; color: #333; font-size: 14px;">
+                                ${displayPct.toLocaleString(undefined, {maximumFractionDigits: 1})}%
+                            </div>
+                        </div>
+                    `</#noparse>;
+                    domContainer.innerHTML += rowHtml;
+                });
+                
+                let axisLabelsHtml = '';
+                let axisTicksHtml = '';
+                
+                if (bulletRanges.length > 0) {
+                    axisLabelsHtml += '<div style="position: absolute; left: 0%; transform: translateX(-50%); font-size: 12px; color: #666;">0</div>';
+                    axisTicksHtml += '<div style="position: absolute; left: 0%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    
+                    bulletRanges.forEach(r => {
+                        let rWidth = 0;
+                        let labelText = r.range;
+                        if (r.range.indexOf('%') !== -1) {
+                            rWidth = parseFloat(r.range) || 0;
+                        } else {
+                            rWidth = ((parseFloat(r.range) || 0) / maxVal) * 100;
+                        }
+                        
+                        axisLabelsHtml += '<div style="position: absolute; left: ' + rWidth + '%; transform: translateX(-50%); font-size: 12px; color: #666;">' + labelText + '</div>';
+                        axisTicksHtml += '<div style="position: absolute; left: ' + rWidth + '%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    });
+                } else {
+                    let axisLabel0 = 0;
+                    let axisLabel25 = (maxVal * 0.25).toLocaleString(undefined, {maximumFractionDigits: 1});
+                    let axisLabel50 = (maxVal * 0.50).toLocaleString(undefined, {maximumFractionDigits: 1});
+                    let axisLabel75 = (maxVal * 0.75).toLocaleString(undefined, {maximumFractionDigits: 1});
+                    let axisLabel100 = (maxVal * 1.00).toLocaleString(undefined, {maximumFractionDigits: 1});
+                    
+                    axisLabelsHtml += '<div style="position: absolute; left: 0%; transform: translateX(-50%); font-size: 12px; color: #666;">' + axisLabel0 + '</div>';
+                    axisLabelsHtml += '<div style="position: absolute; left: 25%; transform: translateX(-50%); font-size: 12px; color: #666;">' + axisLabel25 + '</div>';
+                    axisLabelsHtml += '<div style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; color: #666;">' + axisLabel50 + '</div>';
+                    axisLabelsHtml += '<div style="position: absolute; left: 75%; transform: translateX(-50%); font-size: 12px; color: #666;">' + axisLabel75 + '</div>';
+                    axisLabelsHtml += '<div style="position: absolute; left: 100%; transform: translateX(-50%); font-size: 12px; color: #666;">' + axisLabel100 + '</div>';
+                    
+                    axisTicksHtml += '<div style="position: absolute; left: 0%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    axisTicksHtml += '<div style="position: absolute; left: 25%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    axisTicksHtml += '<div style="position: absolute; left: 50%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    axisTicksHtml += '<div style="position: absolute; left: 75%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                    axisTicksHtml += '<div style="position: absolute; left: 100%; top: 0; height: 5px; width: 2px; background-color: #ccc; margin-top: -5px;"></div>';
+                }
+
+                let axisHtml = <#noparse>`
+                        <div style="display: flex; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                            <div style="width: 30%; max-width: 200px;"></div>
+                            <div style="flex-grow: 1; position: relative; height: 20px; border-top: 2px solid #ccc; padding-top: 5px;">
+                                ${axisLabelsHtml}
+                                ${axisTicksHtml}
+                            </div>
+                            <div style="width: 80px;"></div>
+                        </div>
+                `</#noparse>;
+                domContainer.innerHTML += axisHtml;
+            }
         } else {
             container.append("div")
                 .style("padding", "30px")

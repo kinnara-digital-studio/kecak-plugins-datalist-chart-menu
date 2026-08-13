@@ -140,10 +140,54 @@
         "control_value": "barline"
       },
       {
+        "name": "multiBarPosition",
+        "label": "Multi-Bar Position",
+        "type": "radio",
+        "control_field": "chartType",
+        "control_value": "barline",
+        "value": "side",
+        "options": [
+          {
+            "value": "side",
+            "label": "Side"
+          },
+          {
+            "value": "stack",
+            "label": "Stack"
+          }
+        ]
+      },
+      {
         "name": "barlineLineFields",
         "label": "Line Dataset Field(s)",
-        "description": "Enter the field name to render as Line (e.g. completed_process). Separate by comma if multiple. Other fields in Data tab will be Bar.",
-        "type": "textfield",
+        "type": "grid",
+        "required": "true",
+        "columns": [
+          {
+            "key": "field",
+            "label": "@@dashboardMenu.valueField.field@@",
+            "required": "true"
+          },
+          {
+            "key": "barlineType",
+            "label": "Chart Type",
+            "type": "selectbox",
+            "options": [
+              {
+                "value": "bar",
+                "label": "Bar"
+              },
+              {
+                "value": "line",
+                "label": "Line"
+              }
+            ]
+          },
+          {
+            "key": "hexColor",
+            "label": "HEX Color"
+          }
+        ],
         "control_field": "chartType",
         "control_value": "barline"
       }
