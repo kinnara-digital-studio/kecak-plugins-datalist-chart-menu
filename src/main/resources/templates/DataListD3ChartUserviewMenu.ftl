@@ -314,6 +314,21 @@
                     d3.select(this).attr("opacity", 1);
                 });
                 
+            arc.append("text")
+                .attr("transform", function(d) {
+                    return "translate(" + path.centroid(d) + ")";
+                })
+                .attr("text-anchor", "middle")
+                .attr("dy", ".35em")
+                .style("fill", "#ffffff")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .style("pointer-events", "none")
+                .text(function(d) {
+                    let val = Number(d.data[ds.field]);
+                    return val > 0 ? val : "";
+                });
+                
             if (chartType === 'doughnut') {
                 let total = d3.sum(arrData, d => Number(d[ds.field]));
                 g.append("text")
