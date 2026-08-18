@@ -117,6 +117,14 @@
         "required": "true"
       },
       {
+        "name": "bulletRowDataDesc",
+        "label": "Bullet Row Data Description",
+        "type": "textfield",
+        "description": "Show the description for the row data",
+        "control_field": "chartType",
+        "control_value": "bullet"
+      },
+      {
         "label": "Bar Line Chart Configuration",
         "type": "header",
         "control_field": "chartType",

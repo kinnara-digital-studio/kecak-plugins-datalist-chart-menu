@@ -43,8 +43,22 @@
 		let isBullet = '${element.properties.chartType}' === 'bullet';
         if (isBullet) {
             let bulletDataRows = [];
+            let descTemplate = '${(element.properties.bulletRowDataDesc!"")?js_string}';
+            
             arrData.forEach(item => {
                 let rowObj = { label: item['${element.properties.labelField}'] || 'Unknown' };
+                
+                let desc = "Actual vs Target";
+                if (descTemplate.trim() !== '') {
+                    desc = descTemplate;
+                    Object.keys(item).forEach(key => {
+                        if (item[key] !== null && item[key] !== undefined) {
+                            let regex = new RegExp('\\b' + key + '\\b', 'g');
+                            desc = desc.replace(regex, item[key]);
+                        }
+                    });
+                }
+                rowObj.desc = desc;
                 
                 <#if element.properties.bulletValueField?? && element.properties.bulletValueField != "">
                     rowObj.actual = parseFloat(item['${element.properties.bulletValueField!}']) || 0;
@@ -170,7 +184,7 @@
                     <div style="display: flex; align-items: center; margin-bottom: 25px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                         <div style="width: 30%; max-width: 200px; text-align: right; padding-right: 15px;">
                             <div style="font-size: 15px; font-weight: 600; color: #444;">${row.label}</div>
-                            <div style="font-size: 11px; color: #888;">Actual vs Target</div>
+                            <div style="font-size: 11px; color: #888;">${row.desc}</div>
                         </div>
                         <div style="flex-grow: 1; position: relative; height: 35px; background: #f5f5f5;">
                             <!-- Ranges -->
