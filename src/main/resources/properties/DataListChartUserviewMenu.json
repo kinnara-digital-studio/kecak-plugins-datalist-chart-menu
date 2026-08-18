@@ -157,8 +157,9 @@
         "description": "@@dashboardMenu.valueField.description@@",
         "type": "grid",
         "required": "true",
-        "_control_field": "chartType",
-        "_control_value": "bar|line|polarArea|radar|pie|doughnut|bullet",
+        "control_field": "chartType",
+        "control_value": "^(?!barline$).+$",
+        "control_use_regex": "true",
         "columns": [
           {
             "key": "field",

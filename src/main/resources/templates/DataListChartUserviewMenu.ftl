@@ -244,7 +244,7 @@
         } else {
             // ORIGINAL CHART JS INITIALIZATION
             var chartType = '${element.properties.chartType!}';
-            var mainType = chartType === 'barline' ? 'bar' : chartType;
+            var mainType = chartType;
             
             var customDoughnutLabelPlugin = {
                 id: 'customDoughnutLabelPlugin',
@@ -306,51 +306,15 @@
                         <#assign first = true>
                         <#list element.properties.valueFields! as row>
                             <#if !first>,</#if>
-                            <#assign isLineDataset = false>
-                            <#assign isBarDataset = false>
-                            <#assign customHexColor = "">
-                            
-                            <#if element.properties.chartType! == 'barline'>
-                                <#if element.properties.barlineLineFields?? && element.properties.barlineLineFields?is_sequence>
-                                    <#list element.properties.barlineLineFields as blf>
-                                        <#if blf.field == row.field>
-                                            <#if blf.barlineType! == 'line'>
-                                                <#assign isLineDataset = true>
-                                            <#elseif blf.barlineType! == 'bar'>
-                                                <#assign isBarDataset = true>
-                                            </#if>
-                                            <#if blf.hexColor?? && blf.hexColor != ''>
-                                                <#assign customHexColor = blf.hexColor>
-                                            </#if>
-                                        </#if>
-                                    </#list>
-                                </#if>
-                            </#if>
-                            
                             <#assign useColor = row.maxColor!"">
-                            <#if customHexColor != "">
-                                <#assign useColor = customHexColor>
-                            </#if>
                             <#assign useMinColor = row.minColor!"">
-                            <#if customHexColor != "">
-                                <#assign useMinColor = customHexColor>
-                            </#if>
                             
                             {
                                 label : '${row.label}',
-                                <#if isLineDataset>
-                                type : 'line',
-                                order : 0,
-                                <#elseif isBarDataset>
-                                type : 'bar',
-                                order : 1,
-                                <#elseif element.properties.chartType! == 'barline'>
-                                order : 1,
-                                </#if>
                                 data : _.map(arrData, item => item.${row.field})
                                 <#if useColor != ''>
                                     ,
-                                    <#if element.properties.chartType! == 'line' || element.properties.chartType! == 'radar' || isLineDataset>
+                                    <#if element.properties.chartType! == 'line' || element.properties.chartType! == 'radar'>
                                         borderColor	: hexToRGB('${useColor!}'),
                                         backgroundColor : hexToRGB('${useColor!}', 0.1)
                                     <#else>
@@ -374,25 +338,13 @@
                     ]
                 },
                 options: {
-                    <#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line' || element.properties.chartType! == 'barline'>
+                    <#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line'>
                         scales: {
-                            <#if element.properties.chartType! == 'barline' && element.properties.multiBarPosition! == 'stack'>
-                            xAxes: [{
-                                stacked: true
-                            }],
-                            yAxes: [{
-                                stacked: true,
-                                ticks: {
-                                    beginAtZero:true
-                                }
-                            }]
-                            <#else>
                             yAxes: [{
                                 ticks: {
                                     beginAtZero:true
                                 }
                             }]
-                            </#if>
                         }
                     </#if>
                 },

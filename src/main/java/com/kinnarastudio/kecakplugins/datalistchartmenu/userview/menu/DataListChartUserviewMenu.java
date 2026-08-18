@@ -54,6 +54,8 @@ public class DataListChartUserviewMenu extends UserviewMenu {
         final String template;
         final String chartType = getPropertyString("chartType");
 
+        LogUtil.info(getClassName(), "Chart Type: " + chartType);
+
         if (chartType.equals("barline")) {
             template = "/templates/DataListD3ChartUserviewMenu.ftl";
         } else {
@@ -230,19 +232,32 @@ public class DataListChartUserviewMenu extends UserviewMenu {
         final DataListColumn column = new DataListColumn();
 
         // set label, sync between maxColor and minColor
-        for (Object o : (Object[]) getProperty("valueFields")) {
-            Map<String, String> row = (Map<String, String>) o;
-            if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
-                row.put("maxColor", row.get("minColor"));
-            }
+        Object[] valueFields = (Object[]) getProperty("valueFields");
+        if (valueFields != null) {
+            for (Object o : valueFields) {
+                Map<String, String> row = (Map<String, String>) o;
+                if ((row.get("maxColor") == null || row.get("maxColor").isEmpty()) && row.get("minColor") != null && !row.get("minColor").isEmpty()) {
+                    row.put("maxColor", row.get("minColor"));
+                }
 
-            if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
-                row.put("minColor", row.get("maxColor"));
-            }
+                if ((row.get("minColor") == null || row.get("minColor").isEmpty()) && row.get("maxColor") != null && !row.get("maxColor").isEmpty()) {
+                    row.put("minColor", row.get("maxColor"));
+                }
 
-            column.setName(row.get("field"));
-            int index = Arrays.binarySearch(columns, column, comparator);
-            row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
+                column.setName(row.get("field"));
+                int index = Arrays.binarySearch(columns, column, comparator);
+                row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
+            }
+        }
+        
+        Object[] barlineFields = (Object[]) getProperty("barlineLineFields");
+        if (barlineFields != null) {
+            for (Object o : barlineFields) {
+                Map<String, String> row = (Map<String, String>) o;
+                column.setName(row.get("field"));
+                int index = Arrays.binarySearch(columns, column, comparator);
+                row.put("label", index >= 0 ? columns[index].getLabel() : row.get("field"));
+            }
         }
 
         dataModel.put("className", getClassName());
