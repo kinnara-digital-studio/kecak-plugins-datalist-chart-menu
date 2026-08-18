@@ -28,23 +28,6 @@
         "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options"
       },
       {
-        "name": "chartLibrary",
-        "label": "JS Chart Library",
-        "type": "radio",
-        "required": "true",
-        "value": "chartJs",
-        "options": [
-          {
-            "value": "chartJs",
-            "label": "Chart JS"
-          },
-          {
-            "value": "d3ChartJs",
-            "label": "D3 Chart JS"
-          }
-        ]
-      },
-      {
         "name": "chartType",
         "label": "@@dashboardMenu.chartType@@",
         "type": "selectbox",
@@ -156,6 +139,41 @@
             "label": "Stack"
           }
         ]
+      }
+    ]
+  },
+  {
+    "title": "@@dashboardMenu.data@@",
+    "properties": [
+      {
+        "name": "labelField",
+        "label": "@@dashboardMenu.labelField@@",
+        "description": "@@dashboardMenu.labelField.description@@",
+        "type": "textfield"
+      },
+      {
+        "name": "valueFields",
+        "label": "@@dashboardMenu.valueField@@",
+        "description": "@@dashboardMenu.valueField.description@@",
+        "type": "grid",
+        "required": "true",
+        "_control_field": "chartType",
+        "_control_value": "bar|line|polarArea|radar|pie|doughnut|bullet",
+        "columns": [
+          {
+            "key": "field",
+            "label": "@@dashboardMenu.valueField.field@@",
+            "required": "true"
+          },
+          {
+            "key": "maxColor",
+            "label": "@@dashboardMenu.valueField.maxColor@@"
+          },
+          {
+            "key": "minColor",
+            "label": "@@dashboardMenu.valueField.minColor@@"
+          }
+        ]
       },
       {
         "name": "barlineLineFields",
@@ -190,39 +208,6 @@
         ],
         "control_field": "chartType",
         "control_value": "barline"
-      }
-    ]
-  },
-  {
-    "title": "@@dashboardMenu.data@@",
-    "properties": [
-      {
-        "name": "labelField",
-        "label": "@@dashboardMenu.labelField@@",
-        "description": "@@dashboardMenu.labelField.description@@",
-        "type": "textfield"
-      },
-      {
-        "name": "valueFields",
-        "label": "@@dashboardMenu.valueField@@",
-        "description": "@@dashboardMenu.valueField.description@@",
-        "type": "grid",
-        "required": "true",
-        "columns": [
-          {
-            "key": "field",
-            "label": "@@dashboardMenu.valueField.field@@",
-            "required": "true"
-          },
-          {
-            "key": "maxColor",
-            "label": "@@dashboardMenu.valueField.maxColor@@"
-          },
-          {
-            "key": "minColor",
-            "label": "@@dashboardMenu.valueField.minColor@@"
-          }
-        ]
       }
     ]
   },

@@ -52,11 +52,9 @@ public class DataListChartUserviewMenu extends UserviewMenu {
     @Override
     public String getRenderPage() {
         final String template;
-        final String chartLib = getPropertyString("chartLibrary");
+        final String chartType = getPropertyString("chartType");
 
-        LogUtil.info(getClassName(), "Chart Lib: " + chartLib);
-
-        if (chartLib.equals("d3ChartJs")) {
+        if (chartType.equals("barline")) {
             template = "/templates/DataListD3ChartUserviewMenu.ftl";
         } else {
             template = "/templates/DataListChartUserviewMenu.ftl";
