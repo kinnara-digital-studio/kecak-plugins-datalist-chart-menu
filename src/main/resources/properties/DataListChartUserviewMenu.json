@@ -166,7 +166,7 @@
         "type": "grid",
         "required": "true",
         "control_field": "chartType",
-        "control_value": "^(?!barline$).+$",
+        "control_value": "^(?!barline$|bullet$).+$",
         "control_use_regex": "true",
         "columns": [
           {
