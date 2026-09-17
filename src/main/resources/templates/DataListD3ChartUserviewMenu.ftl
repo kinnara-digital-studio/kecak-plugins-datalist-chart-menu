@@ -66,11 +66,14 @@
         let labelField = '${element.properties.labelField}';
         
         let datasets = [];
-        <#assign chartFields = element.properties.barlineLineFields!>
-        <#if !chartFields?has_content>
-            <#assign chartFields = element.properties.valueFields!>
+        <#assign chartFields = "">
+        <#if element.properties.barlineLineFields?? && element.properties.barlineLineFields?is_sequence>
+            <#assign chartFields = element.properties.barlineLineFields>
+        <#elseif element.properties.valueFields?? && element.properties.valueFields?is_sequence>
+            <#assign chartFields = element.properties.valueFields>
         </#if>
         
+        <#if chartFields?is_sequence>
         <#list chartFields as row>
             <#assign isLineDataset = false>
             <#assign isBarDataset = false>
@@ -100,6 +103,7 @@
                 type: <#if isLineDataset>'line'<#else>'bar'</#if>
             });
         </#list>
+        </#if>
         
         let yMax = 0;
         let yMin = 0;
@@ -138,6 +142,94 @@
         if (yMax === 0 && yMin === 0) yMax = 10;
         
         let colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        if (chartType === 'gauge') {
+            let gaugeTotalValueField = '${element.properties.gaugeTotalValueField!}';
+            let gaugeValueField = '${element.properties.gaugeValueField!}';
+            // Use labelField defined globally from element.properties.labelField
+            
+            let margin = {top: 20, right: 20, bottom: 20, left: 20};
+            let innerWidth = width - margin.left - margin.right;
+            let innerHeight = height - margin.top - margin.bottom;
+
+            let cols = Math.max(1, Math.ceil(Math.sqrt(arrData.length)));
+            let rows = Math.max(1, Math.ceil(arrData.length / cols));
+            let cellWidth = innerWidth / cols;
+            let cellHeight = innerHeight / rows;
+            let radius = Math.min(cellWidth, cellHeight) / 2 * 0.8;
+            
+            arrData.forEach((d, i) => {
+                let col = i % cols;
+                let row = Math.floor(i / cols);
+                let cx = margin.left + col * cellWidth + cellWidth / 2;
+                let cy = margin.top + row * cellHeight + cellHeight / 2 + radius * 0.3;
+                
+                let gaugeMax = Number(gaugeTotalValueField);
+                if (isNaN(gaugeMax) || gaugeMax <= 0) {
+                    gaugeMax = Number(d[gaugeTotalValueField]) || 100;
+                }
+                
+                let val = Number(d[gaugeValueField]) || 0;
+                let label = d[labelField] || '';
+                
+                let gaugeG = svg.append("g")
+                    .attr("class", "d3-element")
+                    .attr("transform", "translate(" + cx + ", " + cy + ")")
+                    .datum(d)
+                    .style("cursor", "pointer")
+                    .on("mouseover", function(event, dData) {
+                        tooltip.transition().duration(200).style("opacity", .9);
+                        tooltip.html("<strong>" + label + "</strong><br/>Value: " + val)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                        d3.select(this).attr("opacity", 0.7);
+                    })
+                    .on("mouseout", function() {
+                        tooltip.transition().duration(500).style("opacity", 0);
+                        d3.select(this).attr("opacity", 1);
+                    });
+                
+                let arc = d3.arc()
+                    .innerRadius(radius * 0.6)
+                    .outerRadius(radius)
+                    .startAngle(-Math.PI / 2);
+                    
+                gaugeG.append("path")
+                    .datum({endAngle: Math.PI / 2})
+                    .style("fill", "#eee")
+                    .attr("d", arc);
+                    
+                let ratio = Math.max(0, Math.min(1, val / gaugeMax));
+                let endAngle = -Math.PI / 2 + (ratio * Math.PI);
+                
+                let arcForeground = d3.arc()
+                    .innerRadius(radius * 0.6)
+                    .outerRadius(radius)
+                    .startAngle(-Math.PI / 2);
+                    
+                gaugeG.append("path")
+                    .datum({endAngle: endAngle})
+                    .style("fill", colorScale(i))
+                    .attr("d", arcForeground);
+                    
+                gaugeG.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "-0.1em")
+                    .style("font-size", (radius * 0.4) + "px")
+                    .style("font-weight", "bold")
+                    .style("pointer-events", "none")
+                    .text(val);
+                    
+                if (label) {
+                    gaugeG.append("text")
+                        .attr("text-anchor", "middle")
+                        .attr("dy", (radius * 0.3) + "px")
+                        .style("font-size", (radius * 0.15) + "px")
+                        .style("pointer-events", "none")
+                        .text(label);
+                }
+            });
+        } else {
 
         let barDatasets = datasets.filter(ds => ds.type === 'bar');
         let lineDatasets = datasets.filter(ds => ds.type === 'line');
@@ -303,6 +395,7 @@
                         });
                 });
             }
+        }
         
         <#if element.properties.chartURL! != ''>
         svg.selectAll(".d3-element").on("click", function(event, d) {

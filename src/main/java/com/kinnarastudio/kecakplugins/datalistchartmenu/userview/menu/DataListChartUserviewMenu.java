@@ -56,7 +56,7 @@ public class DataListChartUserviewMenu extends UserviewMenu {
 
         LogUtil.info(getClassName(), "Chart Type: " + chartType);
 
-        if (chartType.equals("barline")) {
+        if (chartType.equals("barline") || chartType.equals("gauge")) {
             template = "/templates/DataListD3ChartUserviewMenu.ftl";
         } else {
             template = "/templates/DataListChartUserviewMenu.ftl";

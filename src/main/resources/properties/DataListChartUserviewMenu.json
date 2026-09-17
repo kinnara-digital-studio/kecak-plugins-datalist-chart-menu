@@ -64,6 +64,10 @@
           {
             "value": "barline",
             "label": "Bar Line"
+          },
+          {
+            "value": "gauge",
+            "label": "Gauge"
           }
         ]
       },
@@ -147,6 +151,28 @@
             "label": "Stack"
           }
         ]
+      },
+      {
+        "label": "Gauge Chart Configuration",
+        "type": "header",
+        "control_field": "chartType",
+        "control_value": "gauge"
+      },
+      {
+        "name": "gaugeValueField",
+        "label": "Value Field",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "gauge",
+        "required": "true"
+      },
+      {
+        "name": "gaugeTotalValueField",
+        "label": "Total Value",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "gauge",
+        "description": "Can get the value from the field or hardcoded value"
       }
     ]
   },
@@ -166,7 +192,7 @@
         "type": "grid",
         "required": "true",
         "control_field": "chartType",
-        "control_value": "^(?!barline$|bullet$).+$",
+        "control_value": "^(?!barline$|bullet$|gauge$).+$",
         "control_use_regex": "true",
         "columns": [
           {
