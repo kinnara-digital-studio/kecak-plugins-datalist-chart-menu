@@ -105,43 +105,21 @@
         </#list>
         </#if>
         
-        let yMax = 0;
-        let yMin = 0;
         let isStacked = '${element.properties.multiBarPosition!}' === 'stack';
-        
-        if (isStacked) {
-            let barDatasetsLocal = datasets.filter(ds => ds.type === 'bar');
-            arrData.forEach(d => {
-                let pos = 0;
-                let neg = 0;
-                barDatasetsLocal.forEach(ds => {
-                    let v = Number(d[ds.field]) || 0;
-                    if (v >= 0) pos += v;
-                    else neg += v;
-                });
-                if (pos > yMax) yMax = pos;
-                if (neg < yMin) yMin = neg;
-                
-                d._posSum = 0;
-                d._negSum = 0;
-            });
-            datasets.filter(ds => ds.type === 'line').forEach(ds => {
-                let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
-                let minInDs = d3.min(arrData, d => Number(d[ds.field]));
-                if (maxInDs > yMax) yMax = maxInDs;
-                if (minInDs < yMin) yMin = minInDs;
-            });
-        } else {
-            datasets.forEach(ds => {
-                let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
-                let minInDs = d3.min(arrData, d => Number(d[ds.field]));
-                if (maxInDs > yMax) yMax = maxInDs;
-                if (minInDs < yMin) yMin = minInDs;
-            });
-        }
-        if (yMax === 0 && yMin === 0) yMax = 10;
-        
         let colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        function bindChartClick() {
+            <#if element.properties.chartURL! != ''>
+            svg.selectAll(".d3-element").on("click", function(event, d) {
+                let dataObj = d.data ? d.data : d;
+                let parameter = {};
+                <#list element.properties.chartAction! as each>
+                    parameter["${each.chartKey}"] = dataObj["${each.chartValue}"];
+                </#list>
+                window.open("${element.properties.chartURL}?" + $.param(parameter));
+            });
+            </#if>
+        }
 
         if (chartType === 'gauge') {
             let gaugeTotalValueField = '${element.properties.gaugeTotalValueField!}';
@@ -229,14 +207,113 @@
                         .text(label);
                 }
             });
+            bindChartClick();
         } else {
 
-        let barDatasets = datasets.filter(ds => ds.type === 'bar');
-        let lineDatasets = datasets.filter(ds => ds.type === 'line');
+        datasets.forEach(ds => ds.hidden = false);
+        let barDatasetsAll = datasets.filter(ds => ds.type === 'bar');
+        let lineDatasetsAll = datasets.filter(ds => ds.type === 'line');
 
-        let margin = {top: 30, right: 30, bottom: 50, left: 50};
-        let innerWidth = width - margin.left - margin.right;
-        let innerHeight = height - margin.top - margin.bottom;
+        let legendDiv = container.insert("div", "svg")
+            .attr("class", "chart-legend")
+            .style("display", "flex")
+            .style("justify-content", "center")
+            .style("margin-bottom", "10px")
+            .style("font-family", "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif")
+            .style("font-size", "12px")
+            .style("flex-wrap", "wrap");
+
+        barDatasetsAll.forEach((ds, i) => {
+            let color = ds.color && !ds.isColorField ? ds.color : colorScale(i);
+            let item = legendDiv.append("div")
+                .style("display", "flex")
+                .style("align-items", "center")
+                .style("margin", "0 10px")
+                .style("cursor", "pointer")
+                .on("click", function() {
+                    ds.hidden = !ds.hidden;
+                    d3.select(this).style("opacity", ds.hidden ? 0.5 : 1);
+                    d3.select(this).style("text-decoration", ds.hidden ? "line-through" : "none");
+                    drawChart();
+                });
+            item.append("div")
+                .style("width", "30px")
+                .style("height", "12px")
+                .style("background-color", color)
+                .style("margin-right", "6px");
+            item.append("span")
+                .style("color", "#666")
+                .text(ds.label);
+        });
+
+        lineDatasetsAll.forEach((ds, i) => {
+            let color = ds.color && !ds.isColorField ? ds.color : colorScale(barDatasetsAll.length + i);
+            let item = legendDiv.append("div")
+                .style("display", "flex")
+                .style("align-items", "center")
+                .style("margin", "0 10px")
+                .style("cursor", "pointer")
+                .on("click", function() {
+                    ds.hidden = !ds.hidden;
+                    d3.select(this).style("opacity", ds.hidden ? 0.5 : 1);
+                    d3.select(this).style("text-decoration", ds.hidden ? "line-through" : "none");
+                    drawChart();
+                });
+            item.append("div")
+                .style("width", "30px")
+                .style("height", "4px")
+                .style("background-color", color)
+                .style("margin-right", "6px");
+            item.append("span")
+                .style("color", "#666")
+                .text(ds.label);
+        });
+
+        function drawChart() {
+            svg.selectAll("*").remove();
+            let defs = svg.append("defs");
+            
+            let activeDatasets = datasets.filter(ds => !ds.hidden);
+            let barDatasets = activeDatasets.filter(ds => ds.type === 'bar');
+            let lineDatasets = activeDatasets.filter(ds => ds.type === 'line');
+            
+            let yMax = 0;
+            let yMin = 0;
+            
+            if (isStacked) {
+                arrData.forEach(d => {
+                    let pos = 0;
+                    let neg = 0;
+                    barDatasets.forEach(ds => {
+                        let v = Number(d[ds.field]) || 0;
+                        if (v >= 0) pos += v;
+                        else neg += v;
+                    });
+                    if (pos > yMax) yMax = pos;
+                    if (neg < yMin) yMin = neg;
+                    
+                    d._posSum = 0;
+                    d._negSum = 0;
+                });
+                lineDatasets.forEach(ds => {
+                    let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
+                    let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                    if (maxInDs > yMax) yMax = maxInDs;
+                    if (minInDs < yMin) yMin = minInDs;
+                });
+            } else {
+                activeDatasets.forEach(ds => {
+                    let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
+                    let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                    if (maxInDs > yMax) yMax = maxInDs;
+                    if (minInDs < yMin) yMin = minInDs;
+                });
+            }
+            if (yMax === 0 && yMin === 0) yMax = 10;
+
+            let margin = {top: 30, right: 30, bottom: 50, left: 50};
+            let innerWidth = width - margin.left - margin.right;
+            let innerHeight = height - margin.top - margin.bottom;
 
             let x0 = d3.scaleBand()
                 .range([0, innerWidth])
@@ -283,7 +360,8 @@
                     .attr("class", "slice")
                     .attr("transform", d => "translate(" + x0(d[labelField]) + ",0)");
     
-                barDatasets.forEach((ds, i) => {
+                barDatasets.forEach((ds) => {
+                    let i = barDatasetsAll.indexOf(ds);
                     slice.append("rect")
                         .attr("class", "bar d3-element")
                         .attr("x", isStacked ? 0 : x1(ds.field))
@@ -335,7 +413,8 @@
             
             // Draw lines
             if (lineDatasets.length > 0) {
-                lineDatasets.forEach((ds, i) => {
+                lineDatasets.forEach((ds) => {
+                    let i = barDatasetsAll.length + lineDatasetsAll.indexOf(ds);
                     let line = d3.line()
                         .x(d => x0(d[labelField]) + x0.bandwidth() / 2)
                         .y(d => y(Number(d[ds.field])));
@@ -395,17 +474,9 @@
                         });
                 });
             }
+            bindChartClick();
         }
-        
-        <#if element.properties.chartURL! != ''>
-        svg.selectAll(".d3-element").on("click", function(event, d) {
-            let dataObj = d.data ? d.data : d;
-            let parameter = {};
-            <#list element.properties.chartAction! as each>
-                parameter["${each.chartKey}"] = dataObj["${each.chartValue}"];
-            </#list>
-            window.open("${element.properties.chartURL}?" + $.param(parameter));
-        });
-        </#if>
+        drawChart();
+        }
     });
 </script>
