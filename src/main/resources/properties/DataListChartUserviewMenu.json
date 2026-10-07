@@ -186,6 +186,14 @@
         "type": "textfield"
       },
       {
+        "name": "tooltipField",
+        "label": "Tooltip Field",
+        "description": "Field to be displayed on tooltip (optional)",
+        "type": "textfield",
+        "control_field": "chartType",
+        "control_value": "barline"
+      },
+      {
         "name": "valueFields",
         "label": "@@dashboardMenu.valueField@@",
         "description": "@@dashboardMenu.valueField.description@@",

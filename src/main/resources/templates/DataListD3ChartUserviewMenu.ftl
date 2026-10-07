@@ -64,6 +64,10 @@
             .attr("class", "d3-tooltip");
 
         let labelField = '${element.properties.labelField}';
+        let tooltipField = '${element.properties.tooltipField!}';
+        if (!tooltipField) {
+            tooltipField = labelField;
+        }
         
         let datasets = [];
         <#assign chartFields = "">
@@ -148,7 +152,7 @@
                 }
                 
                 let val = Number(d[gaugeValueField]) || 0;
-                let label = d[labelField] || '';
+                let label = d[tooltipField] || '';
                 
                 let gaugeG = svg.append("g")
                     .attr("class", "d3-element")
@@ -281,20 +285,30 @@
             let yMin = 0;
             
             if (isStacked) {
+                let catPos = {};
+                let catNeg = {};
                 arrData.forEach(d => {
-                    let pos = 0;
-                    let neg = 0;
+                    let cat = d[labelField];
+                    if (catPos[cat] === undefined) {
+                        catPos[cat] = 0;
+                        catNeg[cat] = 0;
+                    }
                     barDatasets.forEach(ds => {
                         let v = Number(d[ds.field]) || 0;
-                        if (v >= 0) pos += v;
-                        else neg += v;
+                        if (v >= 0) {
+                            catPos[cat] += v;
+                            d['_posSum_' + ds.field] = catPos[cat];
+                        } else {
+                            catNeg[cat] += v;
+                            d['_negSum_' + ds.field] = catNeg[cat];
+                        }
                     });
-                    if (pos > yMax) yMax = pos;
-                    if (neg < yMin) yMin = neg;
-                    
-                    d._posSum = 0;
-                    d._negSum = 0;
                 });
+                for (let cat in catPos) {
+                    if (catPos[cat] > yMax) yMax = catPos[cat];
+                    if (catNeg[cat] < yMin) yMin = catNeg[cat];
+                }
+                
                 lineDatasets.forEach(ds => {
                     let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
                     let minInDs = d3.min(arrData, d => Number(d[ds.field]));
@@ -369,12 +383,9 @@
                             let val = Number(d[ds.field]);
                             if (isStacked) {
                                 if (val >= 0) {
-                                    d._posSum += val;
-                                    return y(d._posSum);
+                                    return y(d['_posSum_' + ds.field]);
                                 } else {
-                                    let prev = d._negSum;
-                                    d._negSum += val;
-                                    return y(prev);
+                                    return y(d['_negSum_' + ds.field] - val);
                                 }
                             } else {
                                 return val >= 0 ? y(val) : y(0);
@@ -385,9 +396,11 @@
                             let val = Number(d[ds.field]);
                             if (isStacked) {
                                 if (val >= 0) {
-                                    return Math.abs(y(d._posSum - val) - y(d._posSum));
+                                    let currentPos = d['_posSum_' + ds.field];
+                                    return Math.abs(y(currentPos - val) - y(currentPos));
                                 } else {
-                                    return Math.abs(y(d._negSum) - y(d._negSum - val));
+                                    let currentNeg = d['_negSum_' + ds.field];
+                                    return Math.abs(y(currentNeg - val) - y(currentNeg));
                                 }
                             } else {
                                 return Math.abs(y(val) - y(0));
@@ -399,7 +412,7 @@
                         })
                         .on("mouseover", function(event, d) {
                             tooltip.transition().duration(200).style("opacity", .9);
-                            tooltip.html("<strong>" + d[labelField] + "</strong><br/>" + ds.label + ": " + d[ds.field])
+                            tooltip.html("<strong>" + (d[tooltipField] || d[labelField]) + "</strong><br/>" + ds.label + ": " + d[ds.field])
                                 .style("left", (event.pageX + 10) + "px")
                                 .style("top", (event.pageY - 28) + "px");
                             d3.select(this).attr("opacity", 0.7);
@@ -463,7 +476,7 @@
                         })
                         .on("mouseover", function(event, d) {
                             tooltip.transition().duration(200).style("opacity", .9);
-                            tooltip.html("<strong>" + d[labelField] + "</strong><br/>" + ds.label + ": " + d[ds.field])
+                            tooltip.html("<strong>" + (d[tooltipField] || d[labelField]) + "</strong><br/>" + ds.label + ": " + d[ds.field])
                                 .style("left", (event.pageX + 10) + "px")
                                 .style("top", (event.pageY - 28) + "px");
                             d3.select(this).attr("r", 7);
@@ -474,7 +487,7 @@
                         });
                 });
             }
-            bindChartClick();
+             bindChartClick();
         }
         drawChart();
         }
