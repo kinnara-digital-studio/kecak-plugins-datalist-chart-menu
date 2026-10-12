@@ -112,6 +112,16 @@
         let isStacked = '${element.properties.multiBarPosition!}' === 'stack';
         let colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
+        let customColorsList = <#if customColors?? && customColors?has_content>${customColors}<#else>[]</#if>;
+        let customColorsMap = {};
+        if (Array.isArray(customColorsList)) {
+            customColorsList.forEach(function(c) {
+                if (c.labelValue && c.color) {
+                    customColorsMap[c.labelValue] = c.color;
+                }
+            });
+        }
+
         function bindChartClick() {
             <#if element.properties.chartURL! != ''>
             svg.selectAll(".d3-element").on("click", function(event, d) {
@@ -218,6 +228,38 @@
         let barDatasetsAll = datasets.filter(ds => ds.type === 'bar');
         let lineDatasetsAll = datasets.filter(ds => ds.type === 'line');
 
+        let isSubLabelMode = false;
+        let subLabels = [];
+        let hiddenSubLabels = new Set();
+        
+        if (isStacked && tooltipField && tooltipField !== labelField) {
+            let set = new Set();
+            arrData.forEach(function(d) {
+                let val = d[tooltipField];
+                if (val !== undefined && val !== null && String(val).trim() !== '' && !set.has(val)) {
+                    set.add(val);
+                    subLabels.push(val);
+                }
+            });
+            if (subLabels.length > 0 && barDatasetsAll.length <= 1) {
+                isSubLabelMode = true;
+            }
+        }
+
+        function getSubLabelColor(subLabel, index) {
+            if (customColorsMap[subLabel]) {
+                return customColorsMap[subLabel];
+            }
+            if (barDatasetsAll.length > 0) {
+                let ds = barDatasetsAll[0];
+                let row = arrData.find(function(d) { return d[tooltipField] === subLabel; });
+                if (row && ds.isColorField && row[ds.color]) {
+                    return row[ds.color];
+                }
+            }
+            return colorScale(index);
+        }
+
         let legendDiv = container.insert("div", "svg")
             .attr("class", "chart-legend")
             .style("display", "flex")
@@ -225,37 +267,86 @@
             .style("margin-bottom", "10px")
             .style("font-family", "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif")
             .style("font-size", "12px")
-            .style("flex-wrap", "wrap");
+            .style("flex-wrap", "wrap")
+            .style("max-height", "100px")
+            .style("overflow-y", "auto")
+            .style("padding", "4px 8px");
 
-        barDatasetsAll.forEach((ds, i) => {
-            let color = ds.color && !ds.isColorField ? ds.color : colorScale(i);
-            let item = legendDiv.append("div")
-                .style("display", "flex")
-                .style("align-items", "center")
-                .style("margin", "0 10px")
-                .style("cursor", "pointer")
-                .on("click", function() {
-                    ds.hidden = !ds.hidden;
-                    d3.select(this).style("opacity", ds.hidden ? 0.5 : 1);
-                    d3.select(this).style("text-decoration", ds.hidden ? "line-through" : "none");
-                    drawChart();
-                });
-            item.append("div")
-                .style("width", "30px")
-                .style("height", "12px")
-                .style("background-color", color)
-                .style("margin-right", "6px");
-            item.append("span")
-                .style("color", "#666")
-                .text(ds.label);
-        });
+        if (isSubLabelMode) {
+            subLabels.forEach(function(subLabel, idx) {
+                let color = getSubLabelColor(subLabel, idx);
+                let item = legendDiv.append("div")
+                    .style("display", "flex")
+                    .style("align-items", "center")
+                    .style("margin", "3px 10px")
+                    .style("cursor", "pointer")
+                    .attr("title", "Click to hide/show " + subLabel)
+                    .on("click", function() {
+                        if (hiddenSubLabels.has(subLabel)) {
+                            hiddenSubLabels.delete(subLabel);
+                            d3.select(this).style("opacity", 1);
+                            d3.select(this).style("text-decoration", "none");
+                        } else {
+                            hiddenSubLabels.add(subLabel);
+                            d3.select(this).style("opacity", 0.4);
+                            d3.select(this).style("text-decoration", "line-through");
+                        }
+                        drawChart();
+                    })
+                    .on("mouseenter", function() {
+                        if (!hiddenSubLabels.has(subLabel)) {
+                            svg.selectAll(".bar").style("opacity", function(d) {
+                                return (d[tooltipField] === subLabel ? 1 : 0.25);
+                            });
+                        }
+                    })
+                    .on("mouseleave", function() {
+                        svg.selectAll(".bar").style("opacity", 1);
+                    });
+
+                item.append("div")
+                    .style("width", "18px")
+                    .style("height", "12px")
+                    .style("background-color", color)
+                    .style("margin-right", "6px")
+                    .style("border-radius", "2px")
+                    .style("flex-shrink", "0");
+
+                item.append("span")
+                    .style("color", "#444")
+                    .text(subLabel);
+            });
+        } else {
+            barDatasetsAll.forEach((ds, i) => {
+                let color = ds.color && !ds.isColorField ? ds.color : colorScale(i);
+                let item = legendDiv.append("div")
+                    .style("display", "flex")
+                    .style("align-items", "center")
+                    .style("margin", "0 10px")
+                    .style("cursor", "pointer")
+                    .on("click", function() {
+                        ds.hidden = !ds.hidden;
+                        d3.select(this).style("opacity", ds.hidden ? 0.5 : 1);
+                        d3.select(this).style("text-decoration", ds.hidden ? "line-through" : "none");
+                        drawChart();
+                    });
+                item.append("div")
+                    .style("width", "30px")
+                    .style("height", "12px")
+                    .style("background-color", color)
+                    .style("margin-right", "6px");
+                item.append("span")
+                    .style("color", "#666")
+                    .text(ds.label);
+            });
+        }
 
         lineDatasetsAll.forEach((ds, i) => {
-            let color = ds.color && !ds.isColorField ? ds.color : colorScale(barDatasetsAll.length + i);
+            let color = ds.color && !ds.isColorField ? ds.color : colorScale(isSubLabelMode ? subLabels.length + i : barDatasetsAll.length + i);
             let item = legendDiv.append("div")
                 .style("display", "flex")
                 .style("align-items", "center")
-                .style("margin", "0 10px")
+                .style("margin", isSubLabelMode ? "3px 10px" : "0 10px")
                 .style("cursor", "pointer")
                 .on("click", function() {
                     ds.hidden = !ds.hidden;
@@ -281,13 +372,20 @@
             let barDatasets = activeDatasets.filter(ds => ds.type === 'bar');
             let lineDatasets = activeDatasets.filter(ds => ds.type === 'line');
             
+            let currentArrData = arrData;
+            if (isSubLabelMode && hiddenSubLabels.size > 0) {
+                currentArrData = arrData.filter(function(d) {
+                    return !hiddenSubLabels.has(d[tooltipField]);
+                });
+            }
+
             let yMax = 0;
             let yMin = 0;
             
             if (isStacked) {
                 let catPos = {};
                 let catNeg = {};
-                arrData.forEach(d => {
+                currentArrData.forEach(d => {
                     let cat = d[labelField];
                     if (catPos[cat] === undefined) {
                         catPos[cat] = 0;
@@ -310,15 +408,15 @@
                 }
                 
                 lineDatasets.forEach(ds => {
-                    let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
-                    let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                    let maxInDs = d3.max(currentArrData, d => Number(d[ds.field]));
+                    let minInDs = d3.min(currentArrData, d => Number(d[ds.field]));
                     if (maxInDs > yMax) yMax = maxInDs;
                     if (minInDs < yMin) yMin = minInDs;
                 });
             } else {
                 activeDatasets.forEach(ds => {
-                    let maxInDs = d3.max(arrData, d => Number(d[ds.field]));
-                    let minInDs = d3.min(arrData, d => Number(d[ds.field]));
+                    let maxInDs = d3.max(currentArrData, d => Number(d[ds.field]));
+                    let minInDs = d3.min(currentArrData, d => Number(d[ds.field]));
                     if (maxInDs > yMax) yMax = maxInDs;
                     if (minInDs < yMin) yMin = minInDs;
                 });
@@ -369,7 +467,7 @@
             // Draw bars
             if (barDatasets.length > 0) {
                 let slice = g.selectAll(".slice")
-                    .data(arrData)
+                    .data(currentArrData)
                     .enter().append("g")
                     .attr("class", "slice")
                     .attr("transform", d => "translate(" + x0(d[labelField]) + ",0)");
@@ -407,6 +505,11 @@
                             }
                         })
                         .attr("fill", d => {
+                            if (isSubLabelMode) {
+                                let subLabel = d[tooltipField];
+                                let idx = subLabels.indexOf(subLabel);
+                                return getSubLabelColor(subLabel, idx >= 0 ? idx : 0);
+                            }
                             if (ds.isColorField && d[ds.color]) return d[ds.color];
                             return ds.color && !ds.isColorField ? ds.color : colorScale(i);
                         })
@@ -443,7 +546,7 @@
                             .attr("x2", innerWidth)
                             .attr("y2", 0);
                             
-                        arrData.forEach(d => {
+                        currentArrData.forEach(d => {
                             let xPos = x0(d[labelField]) + x0.bandwidth() / 2;
                             let offset = xPos / innerWidth;
                             gradient.append("stop")
@@ -457,14 +560,14 @@
                     }
                     
                     g.append("path")
-                        .datum(arrData)
+                        .datum(currentArrData)
                         .attr("fill", "none")
                         .attr("stroke", pathColor)
                         .attr("stroke-width", 3)
                         .attr("d", line);
                         
                     g.selectAll(".dot-" + ds.field)
-                        .data(arrData)
+                        .data(currentArrData)
                         .enter().append("circle")
                         .attr("class", "dot d3-element")
                         .attr("cx", d => x0(d[labelField]) + x0.bandwidth() / 2)
