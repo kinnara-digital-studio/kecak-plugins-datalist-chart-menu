@@ -93,11 +93,16 @@
 				    maintainAspectRatio: false,
 					<#if element.properties.chartType! == 'bar' || element.properties.chartType! == 'line'>
 	        			scales: {
-	        				yAxes: [{
+	        				y: {
+	                			beginAtZero: true,
 	                			ticks: {
-	                    			beginAtZero:true
+	                    			callback: function(value) {
+	                        			if (Math.floor(value) === value) {
+	                            			return value;
+	                        			}
+	                    			}
 	                			}
-	            			}]
+	            			}
 	        			}
 	        		</#if>
     			}
