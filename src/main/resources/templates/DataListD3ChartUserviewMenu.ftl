@@ -423,6 +423,22 @@
             }
             if (yMax === 0 && yMin === 0) yMax = 10;
 
+            let isAllInteger = true;
+            currentArrData.forEach(d => {
+                activeDatasets.forEach(ds => {
+                    let raw = d[ds.field];
+                    if (raw !== undefined && raw !== null && raw !== '') {
+                        let num = Number(raw);
+                        if (!isNaN(num) && !Number.isInteger(num)) {
+                            isAllInteger = false;
+                        }
+                    }
+                });
+            });
+            if (!Number.isInteger(yMin) || !Number.isInteger(yMax)) {
+                isAllInteger = false;
+            }
+
             let margin = {top: 30, right: 30, bottom: 50, left: 50};
             let innerWidth = width - margin.left - margin.right;
             let innerHeight = height - margin.top - margin.bottom;
@@ -437,9 +453,15 @@
                 .range([0, x0.bandwidth()])
                 .padding(0.05);
                 
+            let yDiff = Math.abs(yMax - yMin);
             let y = d3.scaleLinear()
-                .range([innerHeight, 0])
-                .domain([yMin, yMax]).nice();
+                .range([innerHeight, 0]);
+
+            if (isAllInteger && yDiff > 0 && yDiff <= 10) {
+                y.domain([yMin, yMax]);
+            } else {
+                y.domain([yMin, yMax]).nice();
+            }
 
             let g = svg.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -451,8 +473,18 @@
                   .attr("transform", "translate(-10,0)rotate(-45)")
                   .style("text-anchor", "end");
 
+            let yAxis = d3.axisLeft(y);
+            if (isAllInteger) {
+                if (yDiff <= 10) {
+                    yAxis.tickValues(d3.range(yMin, yMax + 1));
+                } else {
+                    yAxis.ticks(Math.min(Math.round(yDiff), 10));
+                }
+                yAxis.tickFormat(d3.format("d"));
+            }
+
             g.append("g")
-                .call(d3.axisLeft(y));
+                .call(yAxis);
 
             if (yMin < 0) {
                 g.append("line")
